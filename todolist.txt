@@ -1,0 +1,24 @@
+--Features--
+Shortest-path-based "reference-finding" algorithm
+Commands
+	Come up with list of commands
+	     Admin commands - if any
+	     Regular commands
+	Permissions structure 
+Listeners
+Configuration files
+	What needs to be configurable?
+Persistence
+	Finalize persistence scheme
+		 Record vouches in database only?
+		 When to store data? As each vouch or vouch removal is recieved?
+	Implementation of persistence scheme
+Finalize Name & Short Description
+	Name
+		Reputation Web
+	Description
+		A user-driven, destributed reputation system.
+		A decentralized reputation system
+		A distributed reputation system
+		A graph-based reputation system
+	 
