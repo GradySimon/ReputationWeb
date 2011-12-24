@@ -1,4 +1,3 @@
---Features--
 Shortest-path-based "reference-finding" algorithm
 Commands
 	Come up with list of commands
@@ -8,6 +7,9 @@ Commands
 Listeners
 Configuration files
 	What needs to be configurable?
+	Write default configuration file
+	      With comments
+	      Put it in the .jar
 Persistence
 	Finalize persistence scheme
 		 Record vouches in database only?
