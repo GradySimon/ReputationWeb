@@ -12,6 +12,9 @@
 # vim
 .*.sw[a-p]
 
+# emacs
+*~
+
 # various other potential build files
 /build
 /bin

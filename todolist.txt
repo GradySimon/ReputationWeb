@@ -23,4 +23,8 @@ Finalize Name & Short Description
 		A decentralized reputation system
 		A distributed reputation system
 		A graph-based reputation system
+Clean up
+      Go through documentation to change "vouch" to "trust"
+      Decide what comments should actually be there when/if I post code publicly
+      
 	 

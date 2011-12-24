@@ -32,15 +32,21 @@ public class ReputationWeb extends JavaPlugin {
 		}
 		config = getConfig();
 
-		// Instantiate ReputationGraph?
+		// -- Instantiate reputation graph --
+		// Get the graph flow and chain parameters from config
+		double flowFactor = config.getDouble("parameters.flow_factor");
+		int maxChainLength = config.getInt("parameters.max_chain_length");
+		ReputationGraph reputationGraph = new ReputationGraph(flowFactor,
+				maxChainLength);
 
 		// Register command handler
-		reputationCommandExecutor = new ReputationCommandExecutor(this);
+		reputationCommandExecutor = new ReputationCommandExecutor(this,
+				reputationGraph);
 		getCommand("reputation").setExecutor(reputationCommandExecutor);
 		getCommand("rep").setExecutor(reputationCommandExecutor);
 
 		// Load reputation data from database
-
+		
 	}
 
 	private void writeDefaultConfigFile() {

@@ -20,7 +20,12 @@ import org.bukkit.entity.Player;
 public class ReputationEntity {
 	// TODO: Decide if these methods should be package-private.
 	// See rationale in ReputationGraph.java
-
+	
+	/**
+	 * The ReputationGraph of which this ReputationEntity is a part
+	 */
+	private ReputationGraph reputationGraph;
+	
 	/**
 	 * The player represented by this ReputationEntity
 	 */
@@ -47,7 +52,8 @@ public class ReputationEntity {
 	 */
 	private HashSet<ReputationEntity> vouchees = new HashSet<ReputationEntity>();
 
-	public ReputationEntity(Player player) {
+	public ReputationEntity(Player player, ReputationGraph reputationGraph) {
+		this.reputationGraph = reputationGraph;
 		this.player = player;
 		this.reputation = 0.0;
 		this.reputationIsAccurate = false;
@@ -99,8 +105,8 @@ public class ReputationEntity {
 		HashSet<ReputationEntity> nextSet = new HashSet<ReputationEntity>();
 		HashSet<ReputationEntity> updatedSet = new HashSet<ReputationEntity>();
 		todoSet.add(vouchee);
-		for (int i = 1; i <= ReputationGraph.REPUTATION_CHAIN_LENGTH; i++) {
-			boolean isLast = (i == ReputationGraph.REPUTATION_CHAIN_LENGTH);
+		for (int i = 1; i <= reputationGraph.REPUTATION_CHAIN_LENGTH; i++) {
+			boolean isLast = (i == reputationGraph.REPUTATION_CHAIN_LENGTH);
 			for (ReputationEntity current : todoSet) {
 				/*
 				 * Setting this to false means that next time the current
@@ -167,10 +173,10 @@ public class ReputationEntity {
 		 * ReputationEntities to the set of ReputationEntities on the next level
 		 * of distance, to be used in the next iteration.
 		 */
-		for (int i = 0; i < ReputationGraph.REPUTATION_CHAIN_LENGTH; i++) {
-			boolean isLast = (i == ReputationGraph.REPUTATION_CHAIN_LENGTH - 1);
+		for (int i = 0; i < reputationGraph.REPUTATION_CHAIN_LENGTH; i++) {
+			boolean isLast = (i == reputationGraph.REPUTATION_CHAIN_LENGTH - 1);
 			this.reputation += Math.pow(
-					ReputationGraph.REPUTATION_FLOW_MULTIPLIER, i)
+					reputationGraph.REPUTATION_FLOW_MULTIPLIER, i)
 					* currentDegreeSet.size();
 			if (isLast) break; // No need to do the rest if last iteration
 			alreadySeenSet.addAll(currentDegreeSet);
@@ -209,7 +215,6 @@ public class ReputationEntity {
 		// more specific error messages on failure?
 		if (this.vouchees.contains(vouchee)) {
 			this.vouchees.remove(vouchee);
-			assert (vouchee.vouchers.contains(this));
 			vouchee.vouchers.remove(this);
 			propagateVouchChange(vouchee);
 			return true;

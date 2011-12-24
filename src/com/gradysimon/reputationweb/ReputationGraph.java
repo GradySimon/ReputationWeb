@@ -48,7 +48,7 @@ public class ReputationGraph {
 	 * voucher affects the reputation of the vouchee. Should be less than 1 and
 	 * greater than 0.
 	 */
-	public static final double REPUTATION_FLOW_MULTIPLIER = 0.5;
+	public final double REPUTATION_FLOW_MULTIPLIER;
 
 	/**
 	 * Determines how many degrees away from a player in the reputation web
@@ -61,10 +61,15 @@ public class ReputationGraph {
 	 * performance hit of each new vouch action will be. I recommend keeping it
 	 * below 6.
 	 */
-	public static final int REPUTATION_CHAIN_LENGTH = 5;
+	public final int REPUTATION_CHAIN_LENGTH;
 
 	private HashMap<Player, ReputationEntity> playerEntityMap = new HashMap<Player, ReputationEntity>();
-
+	
+	public ReputationGraph(double flowMultiplier, int maxChainLength) {
+		this.REPUTATION_FLOW_MULTIPLIER = flowMultiplier;
+		this.REPUTATION_CHAIN_LENGTH = maxChainLength;
+	}
+	
 	void updateReputationForAll() {
 		
 	}
