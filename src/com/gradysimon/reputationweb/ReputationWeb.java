@@ -38,14 +38,16 @@ public class ReputationWeb extends JavaPlugin {
 		int maxChainLength = config.getInt("parameters.max_chain_length");
 		ReputationGraph reputationGraph = new ReputationGraph(flowFactor,
 				maxChainLength);
-
-		// Register command handler
+		
+		// -- Load reputation data from database --
+		
+		// -- Register command handler -- 
 		reputationCommandExecutor = new ReputationCommandExecutor(this,
 				reputationGraph);
 		getCommand("reputation").setExecutor(reputationCommandExecutor);
 		getCommand("rep").setExecutor(reputationCommandExecutor);
 
-		// Load reputation data from database
+		
 		
 	}
 

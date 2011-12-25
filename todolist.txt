@@ -26,5 +26,6 @@ Finalize Name & Short Description
 Clean up
       Go through documentation to change "vouch" to "trust"
       Decide what comments should actually be there when/if I post code publicly
-      
+      Move some of the functionality in ReputationEntity to ReputationWeb?
+      	   Then the ReputationEntity class wouldn't need to have a reference to the Graph 
 	 
