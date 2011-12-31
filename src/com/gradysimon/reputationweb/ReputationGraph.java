@@ -1,10 +1,14 @@
 package com.gradysimon.reputationweb;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import org.bukkit.entity.Player;
 
@@ -61,7 +65,7 @@ public class ReputationGraph {
 	 */
 	public final int maxChainLength;
 
-	private HashMap<Player, ReputationEntity> playerEntityMap = new HashMap<Player, ReputationEntity>();
+	private Map<Player, ReputationEntity> playerEntityMap = new HashMap<Player, ReputationEntity>();
 
 	public ReputationGraph(double flowMultiplier, int maxChainLength) {
 		this.flowMultiplier = flowMultiplier;
@@ -90,7 +94,7 @@ public class ReputationGraph {
 	}
 
 	private void addPlayerToGraph(Player player) {
-		playerEntityMap.put(player, new ReputationEntity());
+		playerEntityMap.put(player, new ReputationEntity(player));
 	}
 
 	public void removeTrustRelation(Player truster, Player trustee) {
@@ -128,9 +132,9 @@ public class ReputationGraph {
 		 * out from the voucher. Keep track of the players whose reputations
 		 * have already been updated, to ensure that they are not re-updated.
 		 */
-		HashSet<ReputationEntity> todoSet = new HashSet<ReputationEntity>();
-		HashSet<ReputationEntity> nextSet = new HashSet<ReputationEntity>();
-		HashSet<ReputationEntity> updatedSet = new HashSet<ReputationEntity>();
+		Set<ReputationEntity> todoSet = new HashSet<ReputationEntity>();
+		Set<ReputationEntity> nextSet = new HashSet<ReputationEntity>();
+		Set<ReputationEntity> updatedSet = new HashSet<ReputationEntity>();
 		todoSet.add(trustee);
 		for (int i = 1; i <= maxChainLength; i++) {
 			boolean isLast = (i == maxChainLength);
@@ -150,17 +154,74 @@ public class ReputationGraph {
 		}
 	}
 
-	public List<Player> findPathBetween(ReputationEntity player, ReputationEntity otherPlayer) {
-		
-		Queue queue = new LinkedList();
-		HashMap<ReputationEntity, ReputationEntity> pathBackMap = new HashMap<ReputationEntity, ReputationEntity>();
-		
+	public List<Player> getReference(Player requestingPlayer, Player otherPlayer)
+	{
+		if (playerEntityMap.containsKey(requestingPlayer)
+				&& playerEntityMap.containsKey(otherPlayer)) {
+			ReputationEntity requester = playerEntityMap.get(requestingPlayer);
+			ReputationEntity otherEntity = playerEntityMap.get(otherPlayer);
+			return findPathBetween(requester, otherEntity);
+		}
+		return null;
+	}
+
+	private List<Player> findPathBetween(ReputationEntity startEntity,
+			ReputationEntity endEntity)
+	{
+		Queue<ReputationEntity> queue = new LinkedList<ReputationEntity>();
+		Map<ReputationEntity, ReputationEntity> pathBackMap = new HashMap<ReputationEntity, ReputationEntity>();
+		queue.offer(startEntity);
+		while (!queue.isEmpty()) {
+			ReputationEntity current = queue.poll();
+			if (current == endEntity) break;
+			for (ReputationEntity trustee : current.trustees) {
+				if (!pathBackMap.containsKey(trustee)) {
+					pathBackMap.put(trustee, current);
+				}
+				queue.offer(trustee);
+			}
+		}
+		List<ReputationEntity> pathToOtherPlayer;
+		pathToOtherPlayer = buildPathBackList(pathBackMap, startEntity,
+				endEntity);
+		Collections.reverse(pathToOtherPlayer);
+		return convertToPlayerList(pathToOtherPlayer);
+	}
+
+	private List<ReputationEntity> buildPathBackList(
+			Map<ReputationEntity, ReputationEntity> map,
+			ReputationEntity start, ReputationEntity end)
+	{
+		if (map.containsKey(end)) {
+			List<ReputationEntity> pathBackList = new ArrayList<ReputationEntity>();
+			ReputationEntity currentEntityInPath = end;
+			while (currentEntityInPath != start) {
+				pathBackList.add(currentEntityInPath);
+				currentEntityInPath = map.get(currentEntityInPath);
+			}
+			return pathBackList;
+		}
+		return null;
+	}
+
+	private List<Player> convertToPlayerList(
+			List<ReputationEntity> listOfEntities)
+	{
+		List<Player> convertedList = new ArrayList<Player>();
+		for (ReputationEntity current : listOfEntities) {
+			convertedList.add(current.player);
+		}
+		return convertedList;
 	}
 
 	private class ReputationEntity {
 		// TODO: Decide if these methods should be package-private.
 		// See rationale in ReputationGraph.java
 
+		/**
+		 * The Player object represented by this ReputationEntity.
+		 */
+		private final Player player;
 		/**
 		 * The player's reputation as of last reputation update
 		 */
@@ -175,14 +236,15 @@ public class ReputationGraph {
 		/**
 		 * The set of players who trust this player
 		 */
-		private HashSet<ReputationEntity> trusters = new HashSet<ReputationEntity>();
+		private Set<ReputationEntity> trusters = new HashSet<ReputationEntity>();
 
 		/**
 		 * The set of players who this player trusts
 		 */
-		private HashSet<ReputationEntity> trustees = new HashSet<ReputationEntity>();
+		private Set<ReputationEntity> trustees = new HashSet<ReputationEntity>();
 
-		private ReputationEntity() {
+		private ReputationEntity(Player player) {
+			this.player = player;
 			this.reputation = 0.0;
 			this.reputationIsAccurate = false;
 		}
@@ -220,19 +282,19 @@ public class ReputationGraph {
 			 * number of steps away from the ReputationEntity being calculated
 			 * for.
 			 */
-			HashSet<ReputationEntity> currentDegreeSet = new HashSet<ReputationEntity>();
+			Set<ReputationEntity> currentDegreeSet = new HashSet<ReputationEntity>();
 			/*
 			 * Will hold the ReputationEntities who will be in the next
 			 * iteration. If the current degree away from the player being
 			 * calculated for is i, they are i+1 away from the player.
 			 */
-			HashSet<ReputationEntity> nextSet = new HashSet<ReputationEntity>();
+			Set<ReputationEntity> nextSet = new HashSet<ReputationEntity>();
 			/*
 			 * Will hold the ReputationEntities that have already been involved
 			 * in the calculation. They go into this set once they are used to
 			 * ensure that they are never double counted.
 			 */
-			HashSet<ReputationEntity> ignoreSet = new HashSet<ReputationEntity>();
+			Set<ReputationEntity> ignoreSet = new HashSet<ReputationEntity>();
 			currentDegreeSet.addAll(this.trusters);
 			ignoreSet.add(this);
 			for (int i = 0; i < maxChainLength; i++) {
