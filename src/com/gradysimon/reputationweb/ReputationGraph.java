@@ -72,13 +72,33 @@ public class ReputationGraph {
 		this.maxChainLength = maxChainLength;
 	}
 
-	double getReputation(Player player) {
+	/**
+	 * Returns the reputation of the given player. If they player is not yet
+	 * represented in the graph, which would mean that the player is not trusted
+	 * by anyone and does not trust anyone, this method returns 0.
+	 * 
+	 * @param player
+	 * @return
+	 */
+	public double getReputation(Player player) {
 		if (playerEntityMap.containsKey(player)) {
 			return playerEntityMap.get(player).getReputation();
 		}
-		return Double.NaN;
+		return 0;
 	}
 
+	/**
+	 * Adds a trust relationship from Player truster to Player trustee. Updates
+	 * the corresponding ReputationEntity objects for the two Player objects to
+	 * reflect this change. If either of the players were not previously
+	 * represented in the reputation graph, this method will ensure that they
+	 * are added to it.
+	 * 
+	 * @param truster
+	 *            The player who should now trust the trustee
+	 * @param trustee
+	 *            The player who should now be trusted by the truster
+	 */
 	public void addTrustRelation(Player truster, Player trustee) {
 		if (!playerEntityMap.containsKey(truster)) {
 			addPlayerToGraph(truster);
@@ -97,9 +117,18 @@ public class ReputationGraph {
 		playerEntityMap.put(player, new ReputationEntity(player));
 	}
 
+	/**
+	 * Removes a trust relationship, if one exists, between the truster and the
+	 * trustee. Updates the Reputation Graph to reflect this and each player's
+	 * corresponding ReputationEntity.
+	 * 
+	 * @param truster
+	 *            The player that should no longer trust the trustee
+	 * @param trustee
+	 *            The trustee that should no longer be trusted by the truster
+	 */
 	public void removeTrustRelation(Player truster, Player trustee) {
-		if (playerEntityMap.containsKey(truster)
-				&& playerEntityMap.containsKey(trustee)) {
+		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
 			ReputationEntity trusterEntity = playerEntityMap.get(truster);
 			ReputationEntity trusteeEntity = playerEntityMap.get(trustee);
 			trusterEntity.removeTrustee(trusteeEntity);
@@ -108,6 +137,26 @@ public class ReputationGraph {
 		}
 	}
 
+	/**
+	 * Returns true if the player is represented in the graph.
+	 * @param player
+	 * @return
+	 */
+	public boolean playerIsInGraph(Player player) {
+		return playerEntityMap.containsKey(player);
+	}
+
+	/**
+	 * Returns true if the truster trusts the trustee.
+	 * 
+	 * @param truster
+	 *            The Player object that potentially trusts the trustee
+	 * @param trustee
+	 *            The Player object that is potentially trusted by the truster
+	 * @return true if the truster does trust the trustee, false if the truster
+	 *         does not trust the trustee or if one or both of the players have
+	 *         not been entered into the reputation web yet.
+	 */
 	public boolean trustRelationExists(Player truster, Player trustee) {
 		if (playerEntityMap.containsKey(truster)
 				&& playerEntityMap.containsKey(trustee)) {
@@ -154,19 +203,54 @@ public class ReputationGraph {
 		}
 	}
 
-	public List<Player> getReference(Player requestingPlayer, Player otherPlayer)
+	/**
+	 * Returns a list of players that represents, in order, the path from the
+	 * requestingPlayer to the otherPlayer. The first Player in the list is
+	 * trusted by the requesting player. The second player is trusted by the
+	 * first player and so on. The final player in the list is otherPlayer.
+	 * 
+	 * @param trustingPlayer
+	 *            The player to find a connection to otherPlayer from
+	 * @param otherPlayer
+	 *            The player to find a connection to
+	 * @return a list of players that represents a shortest path, in order, of
+	 *         trust between trustingPlayer and otherPlayer.
+	 */
+	// TODO: make sure that this returns a list that contains the otherPlayer,
+	// or update documentation to reflect that it does not.
+	public List<Player> getReference(Player trustingPlayer, Player otherPlayer)
 	{
-		if (playerEntityMap.containsKey(requestingPlayer)
+		if (playerEntityMap.containsKey(trustingPlayer)
 				&& playerEntityMap.containsKey(otherPlayer)) {
-			ReputationEntity requester = playerEntityMap.get(requestingPlayer);
+			ReputationEntity requester = playerEntityMap.get(trustingPlayer);
 			ReputationEntity otherEntity = playerEntityMap.get(otherPlayer);
-			return findPathBetween(requester, otherEntity);
+			return convertToPlayerList(findPathBetween(requester, otherEntity));
 		}
 		return null;
 	}
 
-	private List<Player> findPathBetween(ReputationEntity startEntity,
-			ReputationEntity endEntity)
+	/**
+	 * Returns a list of List of ReputationEntities that represents, in order, a
+	 * shortest path of trust between the startEntity and the endEntity. This
+	 * method is implemented with a breadth-first search, and as such, only
+	 * returns a shortest path, with no guarantees about that path other than
+	 * that is of minimum length.
+	 * 
+	 * @note I had intended to implement this to find the shortest path of trust
+	 *       that also has the highest sum of path element reputations. This was
+	 *       going to be implemented via Djikstra's algorithm, with path weights
+	 *       being generated in such a way that the algorithm always selected
+	 *       the path with the highest sum of player reputations, but this was
+	 *       too complicated for this version of the plugin.
+	 * @param startEntity
+	 * @param endEntity
+	 * @return a List of ReputationEntities that represents a shortest path from
+	 *         the startEntity to the endEntity, which includes the endEntity
+	 */
+	// TODO: ensure that this method returns a list that actually contains the
+	// endEntity, or update documentation to reflect that it does not.
+	private List<ReputationEntity> findPathBetween(
+			ReputationEntity startEntity, ReputationEntity endEntity)
 	{
 		Queue<ReputationEntity> queue = new LinkedList<ReputationEntity>();
 		Map<ReputationEntity, ReputationEntity> pathBackMap = new HashMap<ReputationEntity, ReputationEntity>();
@@ -181,13 +265,27 @@ public class ReputationGraph {
 				queue.offer(trustee);
 			}
 		}
-		List<ReputationEntity> pathToOtherPlayer;
-		pathToOtherPlayer = buildPathBackList(pathBackMap, startEntity,
+		List<ReputationEntity> pathToOtherEntity;
+		pathToOtherEntity = buildPathBackList(pathBackMap, startEntity,
 				endEntity);
-		Collections.reverse(pathToOtherPlayer);
-		return convertToPlayerList(pathToOtherPlayer);
+		Collections.reverse(pathToOtherEntity);
+		return pathToOtherEntity;
 	}
 
+	/**
+	 * Given a map that maps each entity to a the previous entity in the path
+	 * from the start entity to the end entity, this method returns a list that
+	 * represents that path.
+	 * 
+	 * @param map
+	 *            A map that maps each entity to the entity immediately before
+	 *            it in the path from the start to the end entity.
+	 * @param start
+	 *            The first ReputationEntity in the path
+	 * @param end
+	 *            The last ReptuationEntity in the path
+	 * @return A List that represents the path, in order
+	 */
 	private List<ReputationEntity> buildPathBackList(
 			Map<ReputationEntity, ReputationEntity> map,
 			ReputationEntity start, ReputationEntity end)
@@ -204,6 +302,15 @@ public class ReputationGraph {
 		return null;
 	}
 
+	/**
+	 * Converts a list of ReputationEntity objects to a list of Player objects,
+	 * preserving the order
+	 * 
+	 * @param listOfEntities
+	 *            A List of ReputationEntity objects
+	 * @return A List of Player objects, in the same order as the corresponding
+	 *         listOfEntities
+	 */
 	private List<Player> convertToPlayerList(
 			List<ReputationEntity> listOfEntities)
 	{
@@ -249,6 +356,14 @@ public class ReputationGraph {
 			this.reputationIsAccurate = false;
 		}
 
+		/**
+		 * Returns true if this ReputationEntity trusts the trusteeEntity
+		 * 
+		 * @param trusteeEntity
+		 *            the entity to check for trust of.
+		 * @return true if this ReputationEntity trusts the trusteeEntity, false
+		 *         otherwise.
+		 */
 		public boolean trustsEntity(ReputationEntity trusteeEntity) {
 			return trustees.contains(trusteeEntity);
 		}

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Logger;
 
+import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,9 +18,11 @@ public class ReputationWeb extends JavaPlugin {
 	private Logger log;
 	private ReputationCommandExecutor reputationCommandExecutor;
 	protected FileConfiguration config;
+	private Server server;
 
 	public void onEnable() {
-
+		// -- Get the server -- 
+		server = this.getServer();
 		// -- Start logging --
 		log = Logger.getLogger("Minecraft");
 		log.info("Reputation Web enabled."); // TODO Confirm log message
@@ -43,7 +46,7 @@ public class ReputationWeb extends JavaPlugin {
 		
 		// -- Register command handler -- 
 		reputationCommandExecutor = new ReputationCommandExecutor(this,
-				reputationGraph);
+				reputationGraph, server);
 		getCommand("reputation").setExecutor(reputationCommandExecutor);
 		getCommand("rep").setExecutor(reputationCommandExecutor);
 
