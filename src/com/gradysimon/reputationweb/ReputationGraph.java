@@ -81,10 +81,70 @@ public class ReputationGraph {
 	 * @return
 	 */
 	public double getReputation(Player player) {
-		if (playerEntityMap.containsKey(player)) {
-			return playerEntityMap.get(player).getReputation();
+		if (playerIsInGraph(player)) {
+			return getEntity(player).getReputation();
 		}
 		return 0;
+	}
+
+	/**
+	 * Returns the number of players who trust the supplied player. Be sure to
+	 * use only if the player already exists in the graph. Check with
+	 * playerIsInGraph().
+	 * 
+	 * @param player
+	 * @return The number of players who trust the supplied player. If the
+	 *         player doesn't exist, this method returns -1.
+	 */
+	public int getNumberOfTrusters(Player player) {
+		if (playerIsInGraph(player)) {
+			return getEntity(player).getNumberOfTrusters();
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns the number of players the supplied player trusts. Be sure to use
+	 * only if the player already exists in the graph. Check with
+	 * playerIsInGraph().
+	 * 
+	 * @param player
+	 * @return The number of players who the supplied player trusts. If the
+	 *         player doesn't exist, this method returns -1.
+	 */
+	public int getNumberOfTrustees(Player player) {
+		if (playerIsInGraph(player)) {
+			return getEntity(player).getNumberOfTrustees();
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns a List of the players who trust the supplied player.
+	 * 
+	 * @param player
+	 * @return A List of players who trust the supplied player. Null if the
+	 *         supplied player does not exist in the graph.
+	 */
+	public List<Player> getTrusters(Player player) {
+		if (playerIsInGraph(player)) {
+			return convertToPlayerList(getEntity(player).getTrusters());
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a List of the players who the supplied player trusts.
+	 * 
+	 * @param player
+	 * @return A List of players who the supplied player trusts. Null if the
+	 *         supplied player does not exist in the graph.
+	 */
+	public List<Player> getTrustees(Player player) {
+		if (playerIsInGraph(player)) {
+			return convertToPlayerList(getEntity(player).getTrustees());
+		}
+		return null;
 	}
 
 	/**
@@ -100,14 +160,14 @@ public class ReputationGraph {
 	 *            The player who should now be trusted by the truster
 	 */
 	public void addTrustRelation(Player truster, Player trustee) {
-		if (!playerEntityMap.containsKey(truster)) {
+		if (!playerIsInGraph(truster)) {
 			addPlayerToGraph(truster);
 		}
-		if (!playerEntityMap.containsKey(trustee)) {
+		if (!playerIsInGraph(trustee)) {
 			addPlayerToGraph(trustee);
 		}
-		ReputationEntity trusterEntity = playerEntityMap.get(truster);
-		ReputationEntity trusteeEntity = playerEntityMap.get(trustee);
+		ReputationEntity trusterEntity = getEntity(truster);
+		ReputationEntity trusteeEntity = getEntity(trustee);
 		trusterEntity.addTrustee(trusteeEntity);
 		trusteeEntity.addTruster(trusterEntity);
 		propagateTrustChange(trusteeEntity);
@@ -129,8 +189,8 @@ public class ReputationGraph {
 	 */
 	public void removeTrustRelation(Player truster, Player trustee) {
 		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
-			ReputationEntity trusterEntity = playerEntityMap.get(truster);
-			ReputationEntity trusteeEntity = playerEntityMap.get(trustee);
+			ReputationEntity trusterEntity = getEntity(truster);
+			ReputationEntity trusteeEntity = getEntity(trustee);
 			trusterEntity.removeTrustee(trusteeEntity);
 			trusteeEntity.removeTruster(trusterEntity);
 			propagateTrustChange(trusteeEntity);
@@ -139,8 +199,10 @@ public class ReputationGraph {
 
 	/**
 	 * Returns true if the player is represented in the graph.
+	 * 
 	 * @param player
-	 * @return
+	 * @return True if player is already represented in the graph, false
+	 *         otherwise.
 	 */
 	public boolean playerIsInGraph(Player player) {
 		return playerEntityMap.containsKey(player);
@@ -158,13 +220,24 @@ public class ReputationGraph {
 	 *         not been entered into the reputation web yet.
 	 */
 	public boolean trustRelationExists(Player truster, Player trustee) {
-		if (playerEntityMap.containsKey(truster)
-				&& playerEntityMap.containsKey(trustee)) {
-			ReputationEntity trusterEntity = playerEntityMap.get(truster);
-			ReputationEntity trusteeEntity = playerEntityMap.get(trustee);
+		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
+			ReputationEntity trusterEntity = getEntity(truster);
+			ReputationEntity trusteeEntity = getEntity(trustee);
 			return trusterEntity.trustsEntity(trusteeEntity);
 		}
 		return false;
+	}
+
+	/**
+	 * Gets the ReputationEntity for the supplied Player. Be sure to only use
+	 * this method if you are sure the Player is in the graph already. Use
+	 * playerIsInGraph() to check.
+	 * 
+	 * @param player
+	 * @return
+	 */
+	private ReputationEntity getEntity(Player player) {
+		return playerEntityMap.get(player);
 	}
 
 	/**
@@ -220,10 +293,9 @@ public class ReputationGraph {
 	// or update documentation to reflect that it does not.
 	public List<Player> getReference(Player trustingPlayer, Player otherPlayer)
 	{
-		if (playerEntityMap.containsKey(trustingPlayer)
-				&& playerEntityMap.containsKey(otherPlayer)) {
-			ReputationEntity requester = playerEntityMap.get(trustingPlayer);
-			ReputationEntity otherEntity = playerEntityMap.get(otherPlayer);
+		if (playerIsInGraph(trustingPlayer) && playerIsInGraph(otherPlayer)) {
+			ReputationEntity requester = getEntity(trustingPlayer);
+			ReputationEntity otherEntity = getEntity(otherPlayer);
 			return convertToPlayerList(findPathBetween(requester, otherEntity));
 		}
 		return null;
@@ -384,6 +456,22 @@ public class ReputationGraph {
 			this.trustees.add(trustee);
 		}
 
+		private int getNumberOfTrusters() {
+			return this.trusters.size();
+		}
+
+		private int getNumberOfTrustees() {
+			return this.trustees.size();
+		}
+
+		private List<ReputationEntity> getTrusters() {
+			return new ArrayList<ReputationEntity>(trusters);
+		}
+
+		private List<ReputationEntity> getTrustees() {
+			return new ArrayList<ReputationEntity>(trustees);
+		}
+
 		/**
 		 * Recalculate reputation for this ReputationEntity.
 		 */
@@ -444,7 +532,5 @@ public class ReputationGraph {
 			if (!reputationIsAccurate) this.updateReputation();
 			return this.reputation;
 		}
-
 	}
-
 }
