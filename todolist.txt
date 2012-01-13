@@ -1,33 +1,23 @@
-#Note: this todo list is not always up to date with the commits. I forget it sometimes. Don't use it as an accurate history of the project.
-
-Commands
-	Permissions structure 
+#Note: this todo list is not always up to date with the commits. I forget it usually. Don't use it as an accurate history of the project.
+ 
 Configuration files
-	What needs to be configurable?
-	Write default configuration file
-	      With comments
-	      Put it in the .jar
+	Fix writing of default config file to data directory
+	Add comments to embedded config file
 Persistence
 	Finalize persistence scheme
-		 Record vouches in database only?
+		 Record trust events in database only?
 		 When to store data? As each vouch or vouch removal is recieved?
 	Implementation of persistence scheme
 Commands
-	Code the info command
-	     Decide what info it is going to grab
-	     	    top 3 trusters by reputation?
-		    Number of trusters and trustees
-		    Reputation
-
+	Move all output generation to ReputationWebMessages
+	Add messages being sent to players who are newly trusted or not trusted
 Finalize Name & Short Description
-	Name
-		Reputation Web
-	Description
+	Description possibilities
 		A user-driven, destributed reputation system.
 		A decentralized reputation system
 		A distributed reputation system
 		A graph-based reputation system
-Clean up
-      Decide what comments should actually be there when/if I post code publicly
-      
+Structure
+	Change ReputationGraph from using Player objects to OfflinePlayers
+      	
 	 
