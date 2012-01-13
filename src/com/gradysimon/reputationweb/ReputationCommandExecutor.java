@@ -17,6 +17,12 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	Server server;
 	private final int numOfTopTrusters = 3;
 
+	private final String trustPermissionNode = "reputationweb.trust";
+	private final String infoSelfPermissionNode = "reputationweb.info.self";
+	private final String infoAllPermissionNode = "reputationweb.info.all";
+	private final String connectionSelfPermissionNode = "reputationweb.connection.self";
+	private final String connectionAllPermissionNode = "reputationweb.connection.all";
+
 	public ReputationCommandExecutor(ReputationWeb mainClass,
 			ReputationGraph reputationGraph, Server server) {
 		this.mainClass = mainClass;
@@ -27,30 +33,23 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args)
 	{
+		// TODO: DEBUGGING CODE
+		System.out.println("onCommand() recieved command: /" + label);
+		for (int i = 0; i < args.length; i++) {
+			System.out.println("Argument " + i + ": " + args[i]);
+		}
+		// END DEBUG CODE
 		if (args.length > 0) {
-			String firstArgument = args[0].toLowerCase();
-			switch (firstArgument) {
-
-			case "trust":
-			case "vouch":
+			String firstArg = args[0].toLowerCase();
+			if (firstArg.equals("trust")) {
 				return trustCommand(sender, args);
-
-			case "untrust":
-			case "unvouch":
-			case "distrust":
+			} else if (firstArg.equals("untrust")) {
 				return untrustCommand(sender, args);
-
-			case "player":
-			case "info":
+			} else if (firstArg.equals("info")) {
 				return infoCommand(sender, args);
-
-			case "referral":
-			case "reference":
-			case "ref":
-			case "connection":
+			} else if (firstArg.equals("connection")) {
 				return referralCommand(sender, args);
-
-			default:
+			} else {
 				// TODO: should I have a help command?
 				return false;
 			}
@@ -59,48 +58,85 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	private boolean trustCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered trustCommand()");
+		// END DEBUG CODE
+
 		if (!isPlayer(sender)) {
-			// TODO: Must be a player error message
+			sendMessage(sender, ReputationWebMessages.mustBePlayerError());
 			return true;
 		}
-		Player commandSender = (Player) sender;
+		Player senderPlayer = (Player) sender;
+		if (!hasPermission(senderPlayer, trustPermissionNode)) {
+			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			return true;
+		}
+		// TODO: DEBUGGING CODE
+		System.out.println("trustCommand() passed permission check for player "
+				+ senderPlayer.getName());
+		// END DEBUG CODE
 		Player otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
-			// TODO: add error message for player not found
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[1]));
 			return true; // if otherPlayer is null, the player was not found on
 							// the server
 		}
-		if (reputationGraph.trustRelationExists(commandSender, otherPlayer)) {
-			// TODO: already trusts error message
+		if (senderPlayer == otherPlayer) {
+			sendMessage(sender, ReputationWebMessages.cannotTrustSelfError());
 			return true;
 		}
-		reputationGraph.addTrustRelation(commandSender, otherPlayer);
-		// TODO: Trust success message
+		if (reputationGraph.trustRelationExists(senderPlayer, otherPlayer)) {
+			sendMessage(sender,
+					ReputationWebMessages.alreadyTrustsPlayerError(otherPlayer));
+			return true;
+		}
+		reputationGraph.addTrustRelation(senderPlayer, otherPlayer);
+		sendMessage(sender,
+				ReputationWebMessages.trustSuccessMessage(otherPlayer));
 		return true;
 	}
 
 	private boolean untrustCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered untrustCommand()");
+		// END DEBUG CODE
+
 		if (!isPlayer(sender)) {
-			// TODO: Must be a player error message
+			sendMessage(sender, ReputationWebMessages.mustBePlayerError());
 			return true;
 		}
-		Player commandSender = (Player) sender;
+		Player senderPlayer = (Player) sender;
+		if (!hasPermission(senderPlayer, trustPermissionNode)) {
+			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			return true;
+		}
+		// TODO: DEBUGGING CODE
+		System.out
+				.println("untrustCommand() passed permission check for player "
+						+ senderPlayer.getName());
+		// END DEBUG CODE
 		Player otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
-			// TODO: add error message for player not found
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[1]));
 			return true; // if otherPlayer is null, the player was not found on
 							// the server
 		}
-		if (!reputationGraph.trustRelationExists(commandSender, otherPlayer)) {
-			// TODO: don't already trust error message
+		if (!reputationGraph.trustRelationExists(senderPlayer, otherPlayer)) {
+			sendMessage(sender,
+					ReputationWebMessages.doesNotTrustPlayerError(otherPlayer));
 			return true;
 		}
-		reputationGraph.removeTrustRelation(commandSender, otherPlayer);
+		reputationGraph.removeTrustRelation(senderPlayer, otherPlayer);
 		// TODO: Untrust success message
 		return true;
 	}
 
 	private boolean referralCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered referralCommand()");
+		// END DEBUG CODE
 		if (args.length == 2) {
 			return selfReferralCommand(sender, args);
 		}
@@ -111,13 +147,29 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	private boolean selfReferralCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered selfReferralCommand()");
+		// END DEBUG CODE
+
 		if (!isPlayer(sender)) {
-			// TODO: must be a player or must supply 2 names error
+			sendMessage(sender,
+					ReputationWebMessages.mustBePlayerOrAddArgsError());
+			return true;
 		}
 		Player senderPlayer = (Player) sender;
+		if (!hasPermission(senderPlayer, connectionSelfPermissionNode)) {
+			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			return true;
+		}
+		// TODO: DEBUGGING CODE
+		System.out
+				.println("selfReferralCommand() passed permission check for player "
+						+ senderPlayer.getName());
+		// END DEBUG CODE
 		Player otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
-			// TODO: other player doesn't exist error
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[1]));
 			return true;
 		}
 		List<Player> path = reputationGraph.getReference(senderPlayer,
@@ -126,20 +178,43 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			// If this is null, there is no path between them
 			// TODO: ensure that getReference returns null if there is no
 			// path.
-			// TODO: no path exists error.
+			sendMessage(sender,
+					ReputationWebMessages.noTrustPathExistsMessage(otherPlayer));
+			return true;
 		}
 		List<String> namesInPath = convertToNameList(path);
+		// TODO: Move generation of this output to ReputationWebMessages.
 		List<String> output = generateReferralOutput(namesInPath,
 				senderPlayer.getName(), otherPlayer.getName());
 		sendMessage(sender, output);
-		return false;
+		return true;
 	}
 
 	private boolean otherReferralCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered otherReferralCommand()");
+		// END DEBUG CODE
+
+		if (isPlayer(sender)) {
+			if (!hasPermission((Player) sender, connectionAllPermissionNode)) {
+				sendMessage(sender,
+						ReputationWebMessages.lacksPermissionError());
+				return true;
+			}
+		}
+		// TODO: DEBUGGING CODE
+		System.out.println("otherReferralCommand() passed permission check");
+		// END DEBUG CODE
 		Player startPlayer = getRealPlayer(args[1]);
 		Player endPlayer = getRealPlayer(args[2]);
-		if (startPlayer == null || endPlayer == null) {
-			// TODO: At least one of the players doesn't exist error
+		if (startPlayer == null) {
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[1]));
+			return true;
+		}
+		if (endPlayer == null) {
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[2]));
 			return true;
 		}
 		List<Player> path = reputationGraph
@@ -148,7 +223,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			// If this is null, there is no path between them
 			// TODO: ensure that getReference returns null if there is no
 			// path.
-			// TODO: no path exists error.
+			sendMessage(sender, ReputationWebMessages.noTrustPathExistsMessage(
+					startPlayer, endPlayer));
 			return true;
 		}
 		List<String> namesInPath = convertToNameList(path);
@@ -161,6 +237,10 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	private List<String> generateReferralOutput(List<String> path,
 			String startName, String endName)
 	{
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered generateReferralOutput()");
+		// END DEBUG CODE
+
 		List<String> output = new ArrayList<String>();
 		output.add("Chain of trust between player " + startName
 				+ " and player " + endName + ":");
@@ -173,6 +253,10 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	private boolean infoCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered infoCommand()");
+		// END DEBUG CODE
+
 		if (args.length == 1) {
 			return selfInfoCommand(sender);
 		}
@@ -183,24 +267,57 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	private boolean selfInfoCommand(CommandSender sender) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered selfInfoCommand()");
+		// END DEBUG CODE
 		if (!isPlayer(sender)) {
-			// TODO: must be player error
+			sendMessage(sender,
+					ReputationWebMessages.mustBePlayerOrAddArgsError());
 			return true;
 		}
 		Player player = (Player) sender;
+		if (!hasPermission(player, infoSelfPermissionNode)) {
+			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			return true;
+		}
+		// TODO: DEBUGGING CODE
+		System.out
+				.println("selfInfoCommand() passed permission check for player "
+						+ player.getName());
+		// END DEBUG CODE
 		return coreInfoCommand(sender, player);
 	}
 
 	private boolean otherInfoCommand(CommandSender sender, String[] args) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered otherInfoCommand()");
+		// END DEBUG CODE
+
+		if (isPlayer(sender)) {
+			if (!hasPermission((Player) sender, infoAllPermissionNode)) {
+				sendMessage(sender,
+						ReputationWebMessages.lacksPermissionError());
+				return true;
+			}
+		}
+		// TODO: DEBUGGING CODE
+		System.out
+				.println("otherInfoCommand() passed permission check for player");
+		// END DEBUG CODE
 		Player player = getRealPlayer(args[1]);
 		if (player == null) {
-			// TODO: player does not exist error
+			sendMessage(sender,
+					ReputationWebMessages.playerDoesNotExistError(args[1]));
 			return true;
 		}
 		return coreInfoCommand(sender, player);
 	}
-	
+
 	private boolean coreInfoCommand(CommandSender sender, Player player) {
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered coreInfoCommand()");
+		// END DEBUG CODE
+
 		double reputation = reputationGraph.getReputation(player);
 		int numberOfTrusters = reputationGraph.trustersCount(player);
 		int numberOfTrustees = reputationGraph.trusteesCount(player);
@@ -216,12 +333,16 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			double reputation, int numberOfTrusters, int numberOfTrustees,
 			List<Player> topTrusters)
 	{
+		// TODO: DEBUGGING CODE
+		System.out.println("Entered generateInfoOutput()");
+		// END DEBUG CODE
+
 		List<String> output = new ArrayList<String>();
 		output.add("Player: " + playerName);
 		output.add("Reputation: " + reputation);
 		String trustCountOutput = "Trusted by " + numberOfTrusters + " ";
 		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
-				+ ".";
+				+ ". ";
 		trustCountOutput += "Trusts " + numberOfTrustees + " ";
 		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
 				+ ".";
@@ -244,16 +365,33 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	}
 
-	private void sendMessage(CommandSender sender, List<String> output) {
-		for (String message : output) {
-			sender.sendMessage(message);
+	private boolean hasPermission(Player player, String permissionNode) {
+		return player.hasPermission(permissionNode);
+	}
+
+	private void sendMessage(CommandSender sender, List<String> message) {
+		for (String line : message) {
+			sendMessage(sender, line);
 		}
+	}
+
+	private void sendMessage(CommandSender sender, String message) {
+		sender.sendMessage(message);
 	}
 
 	private boolean isPlayer(CommandSender sender) {
 		return sender instanceof Player;
 	}
 
+	/**
+	 * Returns a Player object if and only if the player has been on the server
+	 * before or is presently online. Returns null otherwise.
+	 * 
+	 * @param name
+	 *            The name of the player to return a Player object for.
+	 * @return The Player object with the specified name. Returns null if the
+	 *         player by that name has never been on the server before.
+	 */
 	private Player getRealPlayer(String name) {
 		OfflinePlayer potentialPlayer = server.getOfflinePlayer(name);
 		if (potentialPlayer.hasPlayedBefore()) {
