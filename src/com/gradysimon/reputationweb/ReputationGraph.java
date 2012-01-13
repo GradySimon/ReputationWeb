@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -88,66 +89,6 @@ public class ReputationGraph {
 	}
 
 	/**
-	 * Returns the number of players who trust the supplied player. Be sure to
-	 * use only if the player already exists in the graph. Check with
-	 * playerIsInGraph().
-	 * 
-	 * @param player
-	 * @return The number of players who trust the supplied player. If the
-	 *         player doesn't exist, this method returns -1.
-	 */
-	public int getNumberOfTrusters(Player player) {
-		if (playerIsInGraph(player)) {
-			return getEntity(player).getNumberOfTrusters();
-		}
-		return -1;
-	}
-
-	/**
-	 * Returns the number of players the supplied player trusts. Be sure to use
-	 * only if the player already exists in the graph. Check with
-	 * playerIsInGraph().
-	 * 
-	 * @param player
-	 * @return The number of players who the supplied player trusts. If the
-	 *         player doesn't exist, this method returns -1.
-	 */
-	public int getNumberOfTrustees(Player player) {
-		if (playerIsInGraph(player)) {
-			return getEntity(player).getNumberOfTrustees();
-		}
-		return -1;
-	}
-
-	/**
-	 * Returns a List of the players who trust the supplied player.
-	 * 
-	 * @param player
-	 * @return A List of players who trust the supplied player. Null if the
-	 *         supplied player does not exist in the graph.
-	 */
-	public List<Player> getTrusters(Player player) {
-		if (playerIsInGraph(player)) {
-			return convertToPlayerList(getEntity(player).getTrusters());
-		}
-		return null;
-	}
-
-	/**
-	 * Returns a List of the players who the supplied player trusts.
-	 * 
-	 * @param player
-	 * @return A List of players who the supplied player trusts. Null if the
-	 *         supplied player does not exist in the graph.
-	 */
-	public List<Player> getTrustees(Player player) {
-		if (playerIsInGraph(player)) {
-			return convertToPlayerList(getEntity(player).getTrustees());
-		}
-		return null;
-	}
-
-	/**
 	 * Adds a trust relationship from Player truster to Player trustee. Updates
 	 * the corresponding ReputationEntity objects for the two Player objects to
 	 * reflect this change. If either of the players were not previously
@@ -173,10 +114,6 @@ public class ReputationGraph {
 		propagateTrustChange(trusteeEntity);
 	}
 
-	private void addPlayerToGraph(Player player) {
-		playerEntityMap.put(player, new ReputationEntity(player));
-	}
-
 	/**
 	 * Removes a trust relationship, if one exists, between the truster and the
 	 * trustee. Updates the Reputation Graph to reflect this and each player's
@@ -198,17 +135,6 @@ public class ReputationGraph {
 	}
 
 	/**
-	 * Returns true if the player is represented in the graph.
-	 * 
-	 * @param player
-	 * @return True if player is already represented in the graph, false
-	 *         otherwise.
-	 */
-	public boolean playerIsInGraph(Player player) {
-		return playerEntityMap.containsKey(player);
-	}
-
-	/**
 	 * Returns true if the truster trusts the trustee.
 	 * 
 	 * @param truster
@@ -226,6 +152,136 @@ public class ReputationGraph {
 			return trusterEntity.trustsEntity(trusteeEntity);
 		}
 		return false;
+	}
+
+	/**
+	 * Returns a list of players that represents, in order, the path from the
+	 * requestingPlayer to the otherPlayer. The first Player in the list is
+	 * trusted by the requesting player. The second player is trusted by the
+	 * first player and so on. The final player in the list is otherPlayer.
+	 * 
+	 * @param trustingPlayer
+	 *            The player to find a connection to otherPlayer from
+	 * @param otherPlayer
+	 *            The player to find a connection to
+	 * @return a list of players that represents a shortest path, in order, of
+	 *         trust between trustingPlayer and otherPlayer.
+	 */
+	// TODO: make sure that this returns a list that contains the otherPlayer,
+	// or update documentation to reflect that it does not.
+	public List<Player> getReference(Player trustingPlayer, Player otherPlayer)
+	{
+		if (playerIsInGraph(trustingPlayer) && playerIsInGraph(otherPlayer)) {
+			ReputationEntity requester = getEntity(trustingPlayer);
+			ReputationEntity otherEntity = getEntity(otherPlayer);
+			return convertToPlayerList(findPathBetween(requester, otherEntity));
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the top trusters of the specified player, in order of descending
+	 * reputation.
+	 * 
+	 * @param player
+	 *            The player to return the top trusters of.
+	 * @param number
+	 *            The number of top trusters to return. If the player does not
+	 *            have at least this many trusters, the method will just return
+	 *            as many as are available.
+	 * @return A List of the top trusters of the specified player, in order of
+	 *         descending reputation. Returns an empty List if the player has no
+	 *         trusters or is not yet represented in the graph.
+	 */
+	public List<Player> getTopTrusters(Player player, int number) {
+		if (!playerIsInGraph(player)) {
+			return new ArrayList<Player>();
+		}
+		ReputationEntity entity = getEntity(player);
+		PriorityQueue<ReputationEntity> priorityQueue = new PriorityQueue<ReputationEntity>();
+		priorityQueue.addAll(entity.trusters);
+		List<ReputationEntity> topTrusters = new ArrayList<ReputationEntity>(
+				number);
+		for (int i = 0; i < number; i++) {
+			if (priorityQueue.isEmpty()) break;
+			topTrusters.add(priorityQueue.poll());
+		}
+		return convertToPlayerList(topTrusters);
+	}
+
+	/**
+	 * Returns the number of players who trust the supplied player. Be sure to
+	 * use only if the player already exists in the graph. Check with
+	 * playerIsInGraph().
+	 * 
+	 * @param player
+	 * @return The number of players who trust the supplied player. If the
+	 *         player doesn't exist, this method returns 0.
+	 */
+	public int trustersCount(Player player) {
+		if (playerIsInGraph(player)) {
+			return getEntity(player).getNumberOfTrusters();
+		}
+		return 0;
+	}
+
+	/**
+	 * Returns the number of players the supplied player trusts. Be sure to use
+	 * only if the player already exists in the graph. Check with
+	 * playerIsInGraph().
+	 * 
+	 * @param player
+	 * @return The number of players who the supplied player trusts. If the
+	 *         player doesn't exist, this method returns 0.
+	 */
+	public int trusteesCount(Player player) {
+		if (playerIsInGraph(player)) {
+			return getEntity(player).getNumberOfTrustees();
+		}
+		return 0;
+	}
+
+	/**
+	 * Returns a List of the players who trust the supplied player.
+	 * 
+	 * @param player
+	 * @return A List of players who trust the supplied player. Returns an empty
+	 *         List if the supplied player does not exist in the graph.
+	 */
+	public List<Player> getTrusters(Player player) {
+		if (playerIsInGraph(player)) {
+			return convertToPlayerList(getEntity(player).getTrusters());
+		}
+		return new ArrayList<Player>();
+	}
+
+	/**
+	 * Returns a List of the players who the supplied player trusts.
+	 * 
+	 * @param player
+	 * @return A List of players who the supplied player trusts. Returns an
+	 *         empty List if the supplied player does not exist in the graph.
+	 */
+	public List<Player> getTrustees(Player player) {
+		if (playerIsInGraph(player)) {
+			return convertToPlayerList(getEntity(player).getTrustees());
+		}
+		return new ArrayList<Player>();
+	}
+
+	private void addPlayerToGraph(Player player) {
+		playerEntityMap.put(player, new ReputationEntity(player));
+	}
+
+	/**
+	 * Returns true if the player is represented in the graph.
+	 * 
+	 * @param player
+	 * @return True if player is already represented in the graph, false
+	 *         otherwise.
+	 */
+	private boolean playerIsInGraph(Player player) {
+		return playerEntityMap.containsKey(player);
 	}
 
 	/**
@@ -274,31 +330,6 @@ public class ReputationGraph {
 			todoSet.addAll(nextSet);
 			nextSet.clear();
 		}
-	}
-
-	/**
-	 * Returns a list of players that represents, in order, the path from the
-	 * requestingPlayer to the otherPlayer. The first Player in the list is
-	 * trusted by the requesting player. The second player is trusted by the
-	 * first player and so on. The final player in the list is otherPlayer.
-	 * 
-	 * @param trustingPlayer
-	 *            The player to find a connection to otherPlayer from
-	 * @param otherPlayer
-	 *            The player to find a connection to
-	 * @return a list of players that represents a shortest path, in order, of
-	 *         trust between trustingPlayer and otherPlayer.
-	 */
-	// TODO: make sure that this returns a list that contains the otherPlayer,
-	// or update documentation to reflect that it does not.
-	public List<Player> getReference(Player trustingPlayer, Player otherPlayer)
-	{
-		if (playerIsInGraph(trustingPlayer) && playerIsInGraph(otherPlayer)) {
-			ReputationEntity requester = getEntity(trustingPlayer);
-			ReputationEntity otherEntity = getEntity(otherPlayer);
-			return convertToPlayerList(findPathBetween(requester, otherEntity));
-		}
-		return null;
 	}
 
 	/**
@@ -393,7 +424,7 @@ public class ReputationGraph {
 		return convertedList;
 	}
 
-	private class ReputationEntity {
+	private class ReputationEntity implements Comparable<ReputationEntity> {
 		// TODO: Decide if these methods should be package-private.
 		// See rationale in ReputationGraph.java
 
@@ -531,6 +562,28 @@ public class ReputationGraph {
 		double getReputation() {
 			if (!reputationIsAccurate) this.updateReputation();
 			return this.reputation;
+		}
+
+		/**
+		 * Compares two ReputationEntity objects according to their reputation.
+		 * Not consistent with equals().
+		 * 
+		 * This is not really the best way to do this, but this method makes
+		 * higher reputation entities look "lower" than lower ones. This is so
+		 * that I can use Java's default PriorityQueue, which is actually a min
+		 * PQ when I need a max PQ.
+		 */
+		// TODO: double check that this does what it's supposed to
+		public int compareTo(ReputationEntity other) {
+			ReputationEntity otherEntity = (ReputationEntity) other;
+			double diff = this.getReputation() - otherEntity.getReputation();
+			if (diff > 0) {
+				return -1;
+			}
+			if (diff < 0) {
+				return 1;
+			}
+			return 0;
 		}
 	}
 }

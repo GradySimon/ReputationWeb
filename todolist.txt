@@ -1,10 +1,7 @@
-Shortest-path-based "reference-finding" algorithm
+#Note: this todo list is not always up to date with the commits. I forget it sometimes. Don't use it as an accurate history of the project.
+
 Commands
-	Come up with list of commands
-	     Admin commands - if any
-	     Regular commands
 	Permissions structure 
-Listeners
 Configuration files
 	What needs to be configurable?
 	Write default configuration file
@@ -15,6 +12,13 @@ Persistence
 		 Record vouches in database only?
 		 When to store data? As each vouch or vouch removal is recieved?
 	Implementation of persistence scheme
+Commands
+	Code the info command
+	     Decide what info it is going to grab
+	     	    top 3 trusters by reputation?
+		    Number of trusters and trustees
+		    Reputation
+
 Finalize Name & Short Description
 	Name
 		Reputation Web
@@ -25,6 +29,5 @@ Finalize Name & Short Description
 		A graph-based reputation system
 Clean up
       Decide what comments should actually be there when/if I post code publicly
-      Move some of the functionality in ReputationEntity to ReputationWeb?
-      	   Then the ReputationEntity class wouldn't need to have a reference to the Graph 
+      
 	 
