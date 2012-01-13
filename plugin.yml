@@ -1,3 +1,51 @@
 name: ReputationWeb
 main: com.gradysimon.reputationweb.ReputationWeb
-version: 0.0.0
+version: 0.0.1
+author: Grady Simon (genre)
+commands:
+  rep:
+    alias: [reputation]
+    description: All of the Reputation Web commands
+  reputation:
+      alias: [rep]
+      description: All of the Reputation Web commands
+      usage: |
+          /<command> trust <player>  - Trust the specified player
+          /<command> untrust <player> - Stop trusting the specified player
+          /<command> info - Display reputation information about yourself
+          /<command> info <player> - Display reputation information about the specified player
+          /<command> connection <player> - Find a connection of trust between you and the specified player
+          /<command> connection <player> <player> - Find a connection of trust from the first player to the second player
+  trust:
+      description: Same as /reputation trust. Trust the specified player.
+      usage: /<command> <player> - Trust the specified player
+  untrust:
+      description: Same as /reputation untrust. Trust the specified player.
+      usage: /<command> <player> - Stop trusting the specified player.
+
+permissions:
+  reputationweb.*:
+    description: Gives access to all Reputation Web commands.
+    children:
+      reputationweb.trust: true
+      reputationweb.info.all: true
+      reputationweb.connection.all: true    
+  reputationweb.trust:
+    description: Allows players to trust and untrust other players
+    default: true    
+  reputationweb.info.self:
+    description: Allows players to see reputation information about themselves
+    default: true
+  reputationweb.info.all:
+    description: Allows players to see reputation information about anyone (including themselves)         
+    default: true
+    children:
+      reputationweb.info.self: true      
+  reputationweb.connection.self:
+    description: Allows players to use the connection command to find a connection of trust between himself and a specified player
+    default: true
+  reputationweb.connection.all:
+    description: Allows players to use the connection command to find a connection of trust between any two players, including himself
+    default: true
+    children:
+      reputationweb.connection.self: true

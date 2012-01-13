@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ReputationWeb extends JavaPlugin {
@@ -21,7 +20,7 @@ public class ReputationWeb extends JavaPlugin {
 	private Server server;
 
 	public void onEnable() {
-		// -- Get the server -- 
+		// -- Get the server --
 		server = this.getServer();
 		// -- Start logging --
 		log = Logger.getLogger("Minecraft");
@@ -41,23 +40,31 @@ public class ReputationWeb extends JavaPlugin {
 		int maxChainLength = config.getInt("parameters.max_chain_length");
 		ReputationGraph reputationGraph = new ReputationGraph(flowFactor,
 				maxChainLength);
-		
+
 		// -- Load reputation data from database --
-		
-		// -- Register command handler -- 
+
+		// -- Register command handler --
 		reputationCommandExecutor = new ReputationCommandExecutor(this,
 				reputationGraph, server);
 		getCommand("reputation").setExecutor(reputationCommandExecutor);
 		getCommand("rep").setExecutor(reputationCommandExecutor);
-
-		
-		
 	}
 
 	private void writeDefaultConfigFile() {
 		// configFileInData is the config.yml file that is in the plugin's data
-		// folder
+		// folder inside the plugin directory (not in .jar)
 		File configFileInData = new File(getDataFolder(), "config.yml");
+		if (!getDataFolder().exists()) {
+			getDataFolder().mkdirs();
+		}
+		if (!configFileInData.exists()) {
+			try {
+				configFileInData.createNewFile();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
 		// embeddedConfigFile is a default config.yml that is inside the .jar
 		InputStream embeddedConfigFile = getResource("config.yml");
 		OutputStream configFileOutput;

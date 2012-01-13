@@ -8,8 +8,6 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 public class ReputationCommandExecutor implements CommandExecutor {
@@ -254,11 +252,6 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private boolean isPlayer(CommandSender sender) {
 		return sender instanceof Player;
-	}
-
-	private boolean isConsole(CommandSender sender) {
-		return (sender instanceof ConsoleCommandSender)
-				|| (sender instanceof RemoteConsoleCommandSender);
 	}
 
 	private Player getRealPlayer(String name) {
