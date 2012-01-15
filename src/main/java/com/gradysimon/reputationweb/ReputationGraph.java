@@ -11,7 +11,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
 /**
  * The reputation web that drives this reputation plugin. Represents a graph, in
@@ -31,8 +31,8 @@ import org.bukkit.entity.Player;
  * that vouchee.
  * 
  * The calculation for reputation is fairly complicated. It is not simply the
- * numerical reputation of a player that sets how influential his vouches are.
- * If it were, this would mean that cycles (by which I mean loops) in the
+ * numerical reputation of a player that sets how influential his trusts are. If
+ * it were, this would mean that cycles (by which I mean loops) in the
  * reputation graph would mean that players can influence their own reputation
  * by vouching for those who vouch for them, and it would be possible to greatly
  * increase one's reputation by creating such cycles.
@@ -66,7 +66,7 @@ public class ReputationGraph {
 	 */
 	public final int maxChainLength;
 
-	private Map<Player, ReputationEntity> playerEntityMap = new HashMap<Player, ReputationEntity>();
+	private Map<OfflinePlayer, ReputationEntity> playerEntityMap = new HashMap<OfflinePlayer, ReputationEntity>();
 
 	public ReputationGraph(double flowMultiplier, int maxChainLength) {
 		this.flowMultiplier = flowMultiplier;
@@ -81,7 +81,7 @@ public class ReputationGraph {
 	 * @param player
 	 * @return
 	 */
-	public double getReputation(Player player) {
+	public double getReputation(OfflinePlayer player) {
 		if (playerIsInGraph(player)) {
 			return getEntity(player).getReputation();
 		}
@@ -89,18 +89,18 @@ public class ReputationGraph {
 	}
 
 	/**
-	 * Adds a trust relationship from Player truster to Player trustee. Updates
-	 * the corresponding ReputationEntity objects for the two Player objects to
-	 * reflect this change. If either of the players were not previously
-	 * represented in the reputation graph, this method will ensure that they
-	 * are added to it.
+	 * Adds a trust relationship from OfflinePlayer truster to OfflinePlayer
+	 * trustee. Updates the corresponding ReputationEntity objects for the two
+	 * OfflinePlayer objects to reflect this change. If either of the players
+	 * were not previously represented in the reputation graph, this method will
+	 * ensure that they are added to it.
 	 * 
 	 * @param truster
 	 *            The player who should now trust the trustee
 	 * @param trustee
 	 *            The player who should now be trusted by the truster
 	 */
-	public void addTrustRelation(Player truster, Player trustee) {
+	public void addTrustRelation(OfflinePlayer truster, OfflinePlayer trustee) {
 		if (!playerIsInGraph(truster)) {
 			addPlayerToGraph(truster);
 		}
@@ -124,7 +124,8 @@ public class ReputationGraph {
 	 * @param trustee
 	 *            The trustee that should no longer be trusted by the truster
 	 */
-	public void removeTrustRelation(Player truster, Player trustee) {
+	public void removeTrustRelation(OfflinePlayer truster, OfflinePlayer trustee)
+	{
 		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
 			ReputationEntity trusterEntity = getEntity(truster);
 			ReputationEntity trusteeEntity = getEntity(trustee);
@@ -138,14 +139,17 @@ public class ReputationGraph {
 	 * Returns true if the truster trusts the trustee.
 	 * 
 	 * @param truster
-	 *            The Player object that potentially trusts the trustee
+	 *            The OfflinePlayer object that potentially trusts the trustee
 	 * @param trustee
-	 *            The Player object that is potentially trusted by the truster
+	 *            The OfflinePlayer object that is potentially trusted by the
+	 *            truster
 	 * @return true if the truster does trust the trustee, false if the truster
 	 *         does not trust the trustee or if one or both of the players have
 	 *         not been entered into the reputation web yet.
 	 */
-	public boolean trustRelationExists(Player truster, Player trustee) {
+	public boolean trustRelationExists(OfflinePlayer truster,
+			OfflinePlayer trustee)
+	{
 		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
 			ReputationEntity trusterEntity = getEntity(truster);
 			ReputationEntity trusteeEntity = getEntity(trustee);
@@ -156,8 +160,8 @@ public class ReputationGraph {
 
 	/**
 	 * Returns a list of players that represents, in order, the path from the
-	 * requestingPlayer to the otherPlayer. The first Player in the list is
-	 * trusted by the requesting player. The second player is trusted by the
+	 * requestingPlayer to the otherPlayer. The first OfflinePlayer in the list
+	 * is trusted by the requesting player. The second player is trusted by the
 	 * first player and so on. The final player in the list is otherPlayer.
 	 * 
 	 * @param trustingPlayer
@@ -169,7 +173,8 @@ public class ReputationGraph {
 	 */
 	// TODO: make sure that this returns a list that contains the otherPlayer,
 	// or update documentation to reflect that it does not.
-	public List<Player> getReference(Player trustingPlayer, Player otherPlayer)
+	public List<OfflinePlayer> getReference(OfflinePlayer trustingPlayer,
+			OfflinePlayer otherPlayer)
 	{
 		if (playerIsInGraph(trustingPlayer) && playerIsInGraph(otherPlayer)) {
 			ReputationEntity requester = getEntity(trustingPlayer);
@@ -193,9 +198,10 @@ public class ReputationGraph {
 	 *         descending reputation. Returns an empty List if the player has no
 	 *         trusters or is not yet represented in the graph.
 	 */
-	public List<Player> getTopTrusters(Player player, int number) {
+	public List<OfflinePlayer> getTopTrusters(OfflinePlayer player, int number)
+	{
 		if (!playerIsInGraph(player)) {
-			return new ArrayList<Player>();
+			return new ArrayList<OfflinePlayer>();
 		}
 		ReputationEntity entity = getEntity(player);
 		PriorityQueue<ReputationEntity> priorityQueue = new PriorityQueue<ReputationEntity>();
@@ -218,7 +224,7 @@ public class ReputationGraph {
 	 * @return The number of players who trust the supplied player. If the
 	 *         player doesn't exist, this method returns 0.
 	 */
-	public int trustersCount(Player player) {
+	public int trustersCount(OfflinePlayer player) {
 		if (playerIsInGraph(player)) {
 			return getEntity(player).getNumberOfTrusters();
 		}
@@ -234,7 +240,7 @@ public class ReputationGraph {
 	 * @return The number of players who the supplied player trusts. If the
 	 *         player doesn't exist, this method returns 0.
 	 */
-	public int trusteesCount(Player player) {
+	public int trusteesCount(OfflinePlayer player) {
 		if (playerIsInGraph(player)) {
 			return getEntity(player).getNumberOfTrustees();
 		}
@@ -248,11 +254,11 @@ public class ReputationGraph {
 	 * @return A List of players who trust the supplied player. Returns an empty
 	 *         List if the supplied player does not exist in the graph.
 	 */
-	public List<Player> getTrusters(Player player) {
+	public List<OfflinePlayer> getTrusters(OfflinePlayer player) {
 		if (playerIsInGraph(player)) {
 			return convertToPlayerList(getEntity(player).getTrusters());
 		}
-		return new ArrayList<Player>();
+		return new ArrayList<OfflinePlayer>();
 	}
 
 	/**
@@ -262,14 +268,14 @@ public class ReputationGraph {
 	 * @return A List of players who the supplied player trusts. Returns an
 	 *         empty List if the supplied player does not exist in the graph.
 	 */
-	public List<Player> getTrustees(Player player) {
+	public List<OfflinePlayer> getTrustees(OfflinePlayer player) {
 		if (playerIsInGraph(player)) {
 			return convertToPlayerList(getEntity(player).getTrustees());
 		}
-		return new ArrayList<Player>();
+		return new ArrayList<OfflinePlayer>();
 	}
 
-	private void addPlayerToGraph(Player player) {
+	private void addPlayerToGraph(OfflinePlayer player) {
 		playerEntityMap.put(player, new ReputationEntity(player));
 	}
 
@@ -280,19 +286,19 @@ public class ReputationGraph {
 	 * @return True if player is already represented in the graph, false
 	 *         otherwise.
 	 */
-	private boolean playerIsInGraph(Player player) {
+	public boolean playerIsInGraph(OfflinePlayer player) {
 		return playerEntityMap.containsKey(player);
 	}
 
 	/**
-	 * Gets the ReputationEntity for the supplied Player. Be sure to only use
-	 * this method if you are sure the Player is in the graph already. Use
-	 * playerIsInGraph() to check.
+	 * Gets the ReputationEntity for the supplied OfflinePlayer. Be sure to only
+	 * use this method if you are sure the OfflinePlayer is in the graph
+	 * already. Use playerIsInGraph() to check.
 	 * 
 	 * @param player
 	 * @return
 	 */
-	private ReputationEntity getEntity(Player player) {
+	private ReputationEntity getEntity(OfflinePlayer player) {
 		return playerEntityMap.get(player);
 	}
 
@@ -406,18 +412,18 @@ public class ReputationGraph {
 	}
 
 	/**
-	 * Converts a list of ReputationEntity objects to a list of Player objects,
-	 * preserving the order
+	 * Converts a list of ReputationEntity objects to a list of OfflinePlayer
+	 * objects, preserving the order
 	 * 
 	 * @param listOfEntities
 	 *            A List of ReputationEntity objects
-	 * @return A List of Player objects, in the same order as the corresponding
-	 *         listOfEntities
+	 * @return A List of OfflinePlayer objects, in the same order as the
+	 *         corresponding listOfEntities
 	 */
-	private List<Player> convertToPlayerList(
+	private List<OfflinePlayer> convertToPlayerList(
 			List<ReputationEntity> listOfEntities)
 	{
-		List<Player> convertedList = new ArrayList<Player>();
+		List<OfflinePlayer> convertedList = new ArrayList<OfflinePlayer>();
 		for (ReputationEntity current : listOfEntities) {
 			convertedList.add(current.player);
 		}
@@ -429,9 +435,9 @@ public class ReputationGraph {
 		// See rationale in ReputationGraph.java
 
 		/**
-		 * The Player object represented by this ReputationEntity.
+		 * The OfflinePlayer object represented by this ReputationEntity.
 		 */
-		private final Player player;
+		private final OfflinePlayer player;
 		/**
 		 * The player's reputation as of last reputation update
 		 */
@@ -453,7 +459,7 @@ public class ReputationGraph {
 		 */
 		private Set<ReputationEntity> trustees = new HashSet<ReputationEntity>();
 
-		private ReputationEntity(Player player) {
+		private ReputationEntity(OfflinePlayer player) {
 			this.player = player;
 			this.reputation = 0.0;
 			this.reputationIsAccurate = false;

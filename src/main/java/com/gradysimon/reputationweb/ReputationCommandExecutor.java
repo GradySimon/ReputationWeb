@@ -75,7 +75,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		System.out.println("trustCommand() passed permission check for player "
 				+ senderPlayer.getName());
 		// END DEBUG CODE
-		Player otherPlayer = getRealPlayer(args[1]);
+		OfflinePlayer otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
 			sendMessage(sender,
 					ReputationWebMessages.playerDoesNotExistError(args[1]));
@@ -116,7 +116,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 				.println("untrustCommand() passed permission check for player "
 						+ senderPlayer.getName());
 		// END DEBUG CODE
-		Player otherPlayer = getRealPlayer(args[1]);
+		OfflinePlayer otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
 			sendMessage(sender,
 					ReputationWebMessages.playerDoesNotExistError(args[1]));
@@ -166,13 +166,13 @@ public class ReputationCommandExecutor implements CommandExecutor {
 				.println("selfReferralCommand() passed permission check for player "
 						+ senderPlayer.getName());
 		// END DEBUG CODE
-		Player otherPlayer = getRealPlayer(args[1]);
+		OfflinePlayer otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
 			sendMessage(sender,
 					ReputationWebMessages.playerDoesNotExistError(args[1]));
 			return true;
 		}
-		List<Player> path = reputationGraph.getReference(senderPlayer,
+		List<OfflinePlayer> path = reputationGraph.getReference(senderPlayer,
 				otherPlayer);
 		if (path == null) {
 			// If this is null, there is no path between them
@@ -205,8 +205,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		// TODO: DEBUGGING CODE
 		System.out.println("otherReferralCommand() passed permission check");
 		// END DEBUG CODE
-		Player startPlayer = getRealPlayer(args[1]);
-		Player endPlayer = getRealPlayer(args[2]);
+		OfflinePlayer startPlayer = getRealPlayer(args[1]);
+		OfflinePlayer endPlayer = getRealPlayer(args[2]);
 		if (startPlayer == null) {
 			sendMessage(sender,
 					ReputationWebMessages.playerDoesNotExistError(args[1]));
@@ -217,8 +217,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 					ReputationWebMessages.playerDoesNotExistError(args[2]));
 			return true;
 		}
-		List<Player> path = reputationGraph
-				.getReference(startPlayer, endPlayer);
+		List<OfflinePlayer> path = reputationGraph.getReference(startPlayer,
+				endPlayer);
 		if (path == null) {
 			// If this is null, there is no path between them
 			// TODO: ensure that getReference returns null if there is no
@@ -242,9 +242,9 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		// END DEBUG CODE
 
 		List<String> output = new ArrayList<String>();
-		output.add("Chain of trust between player " + startName
-				+ " and player " + endName + ":");
-		String pathString = "";
+		output.add("Chain of trust between " + startName + " and " + endName
+				+ ":");
+		String pathString = startName;
 		for (String name : path) {
 			pathString += " -> " + name;
 		}
@@ -304,7 +304,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		System.out
 				.println("otherInfoCommand() passed permission check for player");
 		// END DEBUG CODE
-		Player player = getRealPlayer(args[1]);
+		OfflinePlayer player = getRealPlayer(args[1]);
 		if (player == null) {
 			sendMessage(sender,
 					ReputationWebMessages.playerDoesNotExistError(args[1]));
@@ -313,7 +313,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		return coreInfoCommand(sender, player);
 	}
 
-	private boolean coreInfoCommand(CommandSender sender, Player player) {
+	private boolean coreInfoCommand(CommandSender sender, OfflinePlayer player)
+	{
 		// TODO: DEBUGGING CODE
 		System.out.println("Entered coreInfoCommand()");
 		// END DEBUG CODE
@@ -321,8 +322,9 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		double reputation = reputationGraph.getReputation(player);
 		int numberOfTrusters = reputationGraph.trustersCount(player);
 		int numberOfTrustees = reputationGraph.trusteesCount(player);
-		List<Player> topTrusters = reputationGraph.getTopTrusters(player,
-				numOfTopTrusters);
+
+		List<OfflinePlayer> topTrusters = reputationGraph.getTopTrusters(
+				player, numOfTopTrusters);
 		List<String> output = generateInfoOutput(player.getName(), reputation,
 				numberOfTrusters, numberOfTrustees, topTrusters);
 		sendMessage(sender, output);
@@ -331,7 +333,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private List<String> generateInfoOutput(String playerName,
 			double reputation, int numberOfTrusters, int numberOfTrustees,
-			List<Player> topTrusters)
+			List<OfflinePlayer> topTrusters)
 	{
 		// TODO: DEBUGGING CODE
 		System.out.println("Entered generateInfoOutput()");
@@ -344,14 +346,14 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
 				+ ". ";
 		trustCountOutput += "Trusts " + numberOfTrustees + " ";
-		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
+		trustCountOutput += (numberOfTrustees == 1 ? "player" : "players")
 				+ ".";
 		output.add(trustCountOutput);
 		String topTrustersOutput = "Most reputable players who trust "
 				+ playerName + ": ";
 		for (int i = 0; i < topTrusters.size(); i++) {
 
-			Player truster = topTrusters.get(i);
+			OfflinePlayer truster = topTrusters.get(i);
 			// TODO: should I use displayName() on the next line?
 			topTrustersOutput += truster.getName();
 			topTrustersOutput += "(" + reputationGraph.getReputation(truster)
@@ -384,27 +386,42 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	/**
-	 * Returns a Player object if and only if the player has been on the server
-	 * before or is presently online. Returns null otherwise.
+	 * Returns an OfflinePlayer object if and only if the player has been on the
+	 * server before or is presently online. Returns null otherwise.
 	 * 
 	 * @param name
 	 *            The name of the player to return a Player object for.
 	 * @return The Player object with the specified name. Returns null if the
 	 *         player by that name has never been on the server before.
 	 */
-	private Player getRealPlayer(String name) {
+	private OfflinePlayer getRealPlayer(String name) {
+		debugPrintOfflinePlayers();
+		// TODO: DEBUGGING CODE
+		System.out.println("Ingoing name to getRealPlayer(): " + name);
+		// END DEBUGGING CODE
 		OfflinePlayer potentialPlayer = server.getOfflinePlayer(name);
-		if (potentialPlayer.hasPlayedBefore()) {
-			return potentialPlayer.getPlayer();
+		if (potentialPlayer.hasPlayedBefore() || reputationGraph.playerIsInGraph(potentialPlayer)) {
+			// TODO: DEBUGGING CODE
+			System.out.println("Name of outgoing OfflinePlayer: "
+					+ potentialPlayer.getName());
+			// END DEBUGGING CODE
+			return potentialPlayer;
 		}
 		return null;
 	}
 
-	private List<String> convertToNameList(List<Player> playerList) {
+	private List<String> convertToNameList(List<OfflinePlayer> playerList) {
 		List<String> nameList = new ArrayList<String>(playerList.size());
-		for (Player player : playerList) {
+		for (OfflinePlayer player : playerList) {
 			nameList.add(player.getName());
 		}
 		return nameList;
+	}
+	// TODO DEBUGGING CODE
+	private void debugPrintOfflinePlayers() {
+		System.out.println("Printing all players who have ever played on this server:");
+		for (OfflinePlayer player : server.getOfflinePlayers()) {
+			System.out.println(player.getName());
+		}
 	}
 }

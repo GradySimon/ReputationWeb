@@ -51,6 +51,7 @@ public class ReputationWeb extends JavaPlugin {
 	}
 
 	private void writeDefaultConfigFile() {
+		// TODO: message here to indicate default config is being written.
 		// configFileInData is the config.yml file that is in the plugin's data
 		// folder inside the plugin directory (not in .jar)
 		File configFileInData = new File(getDataFolder(), "config.yml");
@@ -78,7 +79,7 @@ public class ReputationWeb extends JavaPlugin {
 		byte[] buffer = new byte[1024]; // input buffer
 		int length; // length actually read
 		try {
-			while ((length = embeddedConfigFile.read(buffer)) < 0) {
+			while ((length = embeddedConfigFile.read(buffer)) > 0) {
 				try {
 					configFileOutput.write(buffer, 0, length);
 				} catch (IOException e) {
