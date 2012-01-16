@@ -3,17 +3,6 @@
 +++++++++++++++
 +++ Current +++
 
-Decide on message formatting.
-       Colors
-       How to display:
-       	   reputations
-	   player names (always with reputation?)
-       Message preface
-       	       Different one for multiline messages
-
-Figure out why command help isn't being displayed for /rep
-       Is it too long?
-
 Put on BukkitDev
 
 Write release thread

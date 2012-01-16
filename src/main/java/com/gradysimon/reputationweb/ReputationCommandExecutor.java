@@ -1,6 +1,5 @@
 package com.gradysimon.reputationweb;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.OfflinePlayer;
@@ -20,7 +19,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	Server server;
 	RWChatOutputManager output;
 
-	private final int numOfTopTrusters = 3;
+	private final int numOfTopTrusters = 5;
 
 	private final String trustPermissionNode = "reputationweb.trust";
 	private final String infoSelfPermissionNode = "reputationweb.info.self";
@@ -63,10 +62,13 @@ public class ReputationCommandExecutor implements CommandExecutor {
 				return true;
 			} else if (firstArg.equals("untrust") && args.length > 1) {
 				untrustCommand(sender, args[1]);
+				return true;
 			} else if (firstArg.equals("info")) {
 				infoCommand(sender, args);
-			} else if (firstArg.equals("connection") && args.length > 2) {
+				return true;
+			} else if (firstArg.equals("connection") && args.length > 1) {
 				referralCommand(sender, args);
+				return true;
 			}
 		}
 		return false;
@@ -179,8 +181,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			output.noTrustPathExistsMessage(sender, otherPlayer);
 			return;
 		}
-		List<String> namesInPath = convertToNameList(path);
-		output.referralCommandOutput(sender, namesInPath, senderPlayer,
+		output.referralCommandOutput(sender, path, senderPlayer,
 				otherPlayer);
 	}
 
@@ -207,8 +208,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			output.noTrustPathExistsMessage(sender, startPlayer, endPlayer);
 			return;
 		}
-		List<String> namesInPath = convertToNameList(path);
-		output.referralCommandOutput(sender, namesInPath, startPlayer,
+		output.referralCommandOutput(sender, path, startPlayer,
 				endPlayer);
 	}
 
@@ -282,13 +282,5 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			return potentialPlayer;
 		}
 		return null;
-	}
-
-	private List<String> convertToNameList(List<OfflinePlayer> playerList) {
-		List<String> nameList = new ArrayList<String>(playerList.size());
-		for (OfflinePlayer player : playerList) {
-			nameList.add(player.getName());
-		}
-		return nameList;
 	}
 }

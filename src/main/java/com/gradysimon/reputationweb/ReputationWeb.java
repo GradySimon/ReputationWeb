@@ -42,8 +42,7 @@ public class ReputationWeb extends JavaPlugin {
 	}
 
 	public void onDisable() {
-		log.info(formatLog(description.getFullName() + ", version "
-				+ description.getVersion() + " disabled."));
+		log.info(description.getFullName() + " disabled.");
 	}
 
 	// Overridden to return the correct list of persistence classes
