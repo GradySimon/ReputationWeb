@@ -1,0 +1,49 @@
+# Do not consider this todo list to be a reliable history of project goals. This is merely to help me to not forget to do something. This file is not always kept up-to-date with the commits. I forget it sometimes (usually).
+
++++++++++++++++
++++ Current +++
+
+/trust and /untrust commands
+
+Set up logging mesages
+
+Remove debugging code and messages
+
+Come up with better way to deal with output to users
+     Colors, standard message preface
+     Maybe a message sending method in the ReputationWebMessages class
+
+Send message to player if he is trusted or untrusted while online
+
+Put on BukkitDev
+
+Write release thread
+
+Evaluate my use of access modifiers (public, private, package-private)
+
+Document more methods
+
+Refactor code to better adhere to clean code principles (especially the commands)
+
+++++++++++++++
++++ Future +++
+
+Integrate with chat plugins
+
+Write some sort of API?
+
+Make database usage smoother
+     Bukkit Persistence Reimplemented?
+
+Do reputation updates in a thread?
+   Should do some sort of load-testing to see if this is necessary
+   	  Write testing methods that let me generate fake trust operations?
+
+Get code looked at by professor to evaluate cleanness and style
+
+Get code looked at by experience Bukkit plugin developer
+
+
+
+
+
