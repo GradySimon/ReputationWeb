@@ -1,5 +1,6 @@
 package com.gradysimon.reputationweb;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.OfflinePlayer;
@@ -38,21 +39,21 @@ class RWChatOutputManager {
 	void alreadyTrustsPlayerError(CommandSender recipient, OfflinePlayer player)
 	{
 		String message = "You already trust the specified player: "
-				+ player.getName();
+				+ formatPlayer(player);
 		sendMessage(recipient, message);
 	}
 
 	void doesNotTrustPlayerError(CommandSender recipient, OfflinePlayer player)
 	{
 		String message = "You do not yet trust the specified player, so you cannot untrust: "
-				+ player.getName();
+				+ formatPlayer(player);
 		sendMessage(recipient, message);
 	}
 
 	void noTrustPathExistsMessage(CommandSender recipient, OfflinePlayer player)
 	{
 		String message = "There is no path of trust between you and player "
-				+ player.getName();
+				+ formatPlayer(player);
 		sendMessage(recipient, message);
 	}
 
@@ -60,17 +61,18 @@ class RWChatOutputManager {
 			OfflinePlayer end)
 	{
 		String message = "There is no path of trust between player "
-				+ start.getName() + " and player " + end.getName();
+				+ formatPlayer(start) + " and player "
+				+ formatPlayer(end);
 		sendMessage(recipient, message);
 	}
 
 	void trustSuccessMessage(CommandSender recipient, OfflinePlayer player) {
-		String message = "Success. You now trust player " + player.getName();
+		String message = "Success. You now trust player " + formatPlayer(player);
 		sendMessage(recipient, message);
 	}
 
 	void untrustSuccessMessage(CommandSender recipient, OfflinePlayer player) {
-		String message = "Success. You no longer trust " + player.getName();
+		String message = "Success. You no longer trust " + formatPlayer(player);
 		sendMessage(recipient, message);
 	}
 
@@ -91,7 +93,7 @@ class RWChatOutputManager {
 
 	void playerTrustedMessage(Player player, OfflinePlayer truster) {
 		double newReputation = reputationGraph.getReputation(player);
-		String message = truster.getName()
+		String message = formatPlayer(truster)
 				+ " now trusts you. Your new reputation is "
 				+ formatRep(newReputation) + ".";
 		sendMessage(player, message);
@@ -99,10 +101,57 @@ class RWChatOutputManager {
 
 	void playerUntrustedMessage(Player player, OfflinePlayer truster) {
 		double newReputation = reputationGraph.getReputation(player);
-		String message = truster.getName()
+		String message = formatPlayer(truster)
 				+ " has stopped trusting you. Your new reputation is "
 				+ formatRep(newReputation) + ".";
 		sendMessage(player, message);
+	}
+
+	void referralCommandOutput(CommandSender sender, List<String> path,
+			OfflinePlayer startPlayer, OfflinePlayer endPlayer)
+	{
+		List<String> output = new ArrayList<String>();
+		output.add("Chain of trust between " + formatPlayer(startPlayer)
+				+ " and " + formatPlayer(endPlayer) + ":");
+		String pathString = formatPlayer(startPlayer);
+		for (String name : path) {
+			pathString += " -> " + name;
+		}
+		output.add(pathString);
+		sendMessage(sender, output);
+	}
+
+	void infoCommandOutput(CommandSender sender, OfflinePlayer player,
+			List<OfflinePlayer> topTrusters)
+	{
+		double reputation = reputationGraph.getReputation(player);
+		int numberOfTrusters = reputationGraph.trustersCount(player);
+		int numberOfTrustees = reputationGraph.trusteesCount(player);
+		String playerName = formatPlayer(player);
+		List<String> output = new ArrayList<String>();
+		output.add("Player: " + formatPlayer(player));
+		output.add("Reputation: " + reputation);
+		String trustCountOutput = "Trusted by " + formatNum(numberOfTrusters)
+				+ " ";
+		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
+				+ ". ";
+		trustCountOutput += "Trusts " + formatNum(numberOfTrustees) + " ";
+		trustCountOutput += (numberOfTrustees == 1 ? "player" : "players")
+				+ ".";
+		output.add(trustCountOutput);
+		String topTrustersOutput = "Most reputable players who trust "
+				+ playerName + ": ";
+		for (int i = 0; i < topTrusters.size(); i++) {
+			OfflinePlayer truster = topTrusters.get(i);
+			topTrustersOutput += truster.getName();
+			topTrustersOutput += "(" + reputationGraph.getReputation(truster)
+					+ ")";
+			if (i != topTrusters.size() - 1) {
+				topTrustersOutput += ", ";
+			}
+		}
+		output.add(topTrustersOutput);
+		sendMessage(sender, output);
 	}
 
 	private static String formatRep(double reputation) {
@@ -110,8 +159,17 @@ class RWChatOutputManager {
 		return formattedString;
 	}
 
-	private static String formatPlayerName(OfflinePlayer player) {
+	// TODO: consider using getDisplayName().
+	private static String formatPlayer(OfflinePlayer player) {
 		String formattedString = player.getName();
 		return formattedString;
+	}
+
+	private static String formatNum(int num) {
+		return "" + num;
+	}
+
+	private static String formatNum(double num) {
+		return "" + num;
 	}
 }

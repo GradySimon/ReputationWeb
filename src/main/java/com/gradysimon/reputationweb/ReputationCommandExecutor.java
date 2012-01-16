@@ -19,7 +19,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	ReputationGraph reputationGraph;
 	Server server;
 	RWChatOutputManager output;
-	
+
 	private final int numOfTopTrusters = 3;
 
 	private final String trustPermissionNode = "reputationweb.trust";
@@ -137,7 +137,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			output.playerUntrustedMessage(otherPlayer.getPlayer(), senderPlayer);
 		}
 	}
-	
+
 	private void removeTrustFromDatabase(String truster, String trustee) {
 		EbeanServer database = plugin.getPluginDatabase();
 		Query<Trust> query = database.find(Trust.class);
@@ -180,8 +180,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			return;
 		}
 		List<String> namesInPath = convertToNameList(path);
-		 referralCommandOutput(sender, namesInPath,
-				senderPlayer.getName(), otherPlayer.getName());
+		output.referralCommandOutput(sender, namesInPath, senderPlayer,
+				otherPlayer);
 	}
 
 	private void otherReferralCommand(CommandSender sender, String[] args) {
@@ -204,27 +204,12 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		List<OfflinePlayer> path = reputationGraph.getReference(startPlayer,
 				endPlayer);
 		if (path == null) {
-			output.noTrustPathExistsMessage(sender, startPlayer,
-					endPlayer);
+			output.noTrustPathExistsMessage(sender, startPlayer, endPlayer);
 			return;
 		}
 		List<String> namesInPath = convertToNameList(path);
-		referralCommandOutput(sender, namesInPath,
-				startPlayer.getName(), endPlayer.getName());
-	}
-
-	private void referralCommandOutput(CommandSender sender, List<String> path,
-			String startName, String endName)
-	{
-		List<String> output = new ArrayList<String>();
-		output.add("Chain of trust between " + startName + " and " + endName
-				+ ":");
-		String pathString = startName;
-		for (String name : path) {
-			pathString += " -> " + name;
-		}
-		output.add(pathString);
-		this.output.sendMessage(sender, output);
+		output.referralCommandOutput(sender, namesInPath, startPlayer,
+				endPlayer);
 	}
 
 	private boolean infoCommand(CommandSender sender, String[] args) {
@@ -268,47 +253,10 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	}
 
 	private void coreInfoCommand(CommandSender sender, OfflinePlayer player) {
-		double reputation = reputationGraph.getReputation(player);
-		int numberOfTrusters = reputationGraph.trustersCount(player);
-		int numberOfTrustees = reputationGraph.trusteesCount(player);
-
 		List<OfflinePlayer> topTrusters = reputationGraph.getTopTrusters(
 				player, numOfTopTrusters);
-		infoCommandOutput(sender, player.getName(), reputation,
-				numberOfTrusters, numberOfTrustees, topTrusters);
-		return;
+		output.infoCommandOutput(sender, player, topTrusters);
 	}
-	
-	private void infoCommandOutput(CommandSender sender, String playerName,
-			double reputation, int numberOfTrusters, int numberOfTrustees,
-			List<OfflinePlayer> topTrusters)
-	{
-		List<String> output = new ArrayList<String>();
-		output.add("Player: " + playerName);
-		output.add("Reputation: " + reputation);
-		String trustCountOutput = "Trusted by " + numberOfTrusters + " ";
-		trustCountOutput += (numberOfTrusters == 1 ? "player" : "players")
-				+ ". ";
-		trustCountOutput += "Trusts " + numberOfTrustees + " ";
-		trustCountOutput += (numberOfTrustees == 1 ? "player" : "players")
-				+ ".";
-		output.add(trustCountOutput);
-		String topTrustersOutput = "Most reputable players who trust "
-				+ playerName + ": ";
-		for (int i = 0; i < topTrusters.size(); i++) {
-			OfflinePlayer truster = topTrusters.get(i);
-			// TODO: should I use displayName() on the next line?
-			topTrustersOutput += truster.getName();
-			topTrustersOutput += "(" + reputationGraph.getReputation(truster)
-					+ ")";
-			if (i != topTrusters.size() - 1) {
-				topTrustersOutput += ", ";
-			}
-		}
-		output.add(topTrustersOutput);
-		this.output.sendMessage(sender, output);
-	}
-	
 
 	private boolean hasPermission(Player player, String permissionNode) {
 		return player.hasPermission(permissionNode);
