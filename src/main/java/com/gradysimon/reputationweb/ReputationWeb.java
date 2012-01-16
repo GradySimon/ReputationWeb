@@ -119,6 +119,7 @@ public class ReputationWeb extends JavaPlugin {
 	}
 
 	private void initializeDatabase() {
+		handleEbeanDotProperties();
 		database = getDatabase();
 		try {
 			database.find(Trust.class).findRowCount();
@@ -127,6 +128,21 @@ public class ReputationWeb extends JavaPlugin {
 			installDDL();
 			database = getDatabase(); // not sure if necessary
 		}
+	}
+
+	private void handleEbeanDotProperties() {
+		File ebeanDotProperties = new File("ebean.properties");
+		try {
+			if (ebeanDotProperties.createNewFile()) {
+				// TODO: Logging message that ebean.properties was created by
+				// this plugin.
+			}
+		} catch (IOException e) {
+			// TODO: message that ebean.properties could not be created and to
+			// ignore the warning message. (? or not. Decide).
+			e.printStackTrace();
+		}
+
 	}
 
 	// Overridden to return the correct list of persistence classes
@@ -138,7 +154,6 @@ public class ReputationWeb extends JavaPlugin {
 
 	private void loadReputationData() {
 		populateReputationGraph(getTrustsFromDatabase());
-
 	}
 
 	private void populateReputationGraph(List<Trust> trusts) {
@@ -159,11 +174,11 @@ public class ReputationWeb extends JavaPlugin {
 		List<Trust> allTrusts = trustsQuery.findList();
 		return allTrusts;
 	}
-	
+
 	EbeanServer getPluginDatabase() {
 		return getDatabase();
 	}
-	
+
 	private void initializeCommandHandler() {
 		reputationCommandExecutor = new ReputationCommandExecutor(this,
 				reputationGraph, server);

@@ -5,6 +5,8 @@
 
 /trust and /untrust commands
 
+Deal with all TODO:s
+
 Set up logging mesages
 
 Remove debugging code and messages
