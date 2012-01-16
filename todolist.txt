@@ -3,8 +3,6 @@
 +++++++++++++++
 +++ Current +++
 
-/trust and /untrust commands
-
 Deal with all TODO:s
 
 Set up logging mesages
@@ -13,9 +11,6 @@ Remove debugging code and messages
 
 Come up with better way to deal with output to users
      Colors, standard message preface
-     Maybe a message sending method in the ReputationWebMessages class
-
-Send message to player if he is trusted or untrusted while online
 
 Put on BukkitDev
 
