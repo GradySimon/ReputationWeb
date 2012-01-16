@@ -3,20 +3,20 @@
 +++++++++++++++
 +++ Current +++
 
-Deal with all TODO:s
+Decide on message formatting.
+       Colors
+       How to display:
+       	   reputations
+	   player names (always with reputation?)
+       Message preface
+       	       Different one for multiline messages
 
-Set up logging mesages
-
-Remove debugging code and messages
-
-Come up with better way to deal with output to users
-     Colors, standard message preface
+Figure out why command help isn't being displayed for /rep
+       Is it too long?
 
 Put on BukkitDev
 
 Write release thread
-
-Evaluate my use of access modifiers (public, private, package-private)
 
 Document more methods
 

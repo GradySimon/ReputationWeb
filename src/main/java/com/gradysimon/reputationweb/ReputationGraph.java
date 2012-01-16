@@ -44,13 +44,6 @@ import org.bukkit.OfflinePlayer;
  * 
  */
 public class ReputationGraph {
-	/*
-	 * TODO: Decide if methods should be package-private Should these methods
-	 * really be package-private? My rationale is that this will prevent other
-	 * plugins from messing with them, thus providing assurance to users that
-	 * reputations are legitmate.
-	 */
-
 	/**
 	 * Determines how strongly the reputation of the truster affects the
 	 * reputation of the trustee. Should be less than 1 and greater than 0.
@@ -171,8 +164,6 @@ public class ReputationGraph {
 	 * @return a list of players that represents a shortest path, in order, of
 	 *         trust between trustingPlayer and otherPlayer.
 	 */
-	// TODO: make sure that this returns a list that contains the otherPlayer,
-	// or update documentation to reflect that it does not.
 	public List<OfflinePlayer> getReference(OfflinePlayer trustingPlayer,
 			OfflinePlayer otherPlayer)
 	{
@@ -356,8 +347,6 @@ public class ReputationGraph {
 	 * @return a List of ReputationEntities that represents a shortest path from
 	 *         the startEntity to the endEntity, which includes the endEntity
 	 */
-	// TODO: ensure that this method returns a list that actually contains the
-	// endEntity, or update documentation to reflect that it does not.
 	private List<ReputationEntity> findPathBetween(
 			ReputationEntity startEntity, ReputationEntity endEntity)
 	{
@@ -431,9 +420,6 @@ public class ReputationGraph {
 	}
 
 	private class ReputationEntity implements Comparable<ReputationEntity> {
-		// TODO: Decide if these methods should be package-private.
-		// See rationale in ReputationGraph.java
-
 		/**
 		 * The OfflinePlayer object represented by this ReputationEntity.
 		 */
@@ -579,7 +565,6 @@ public class ReputationGraph {
 		 * that I can use Java's default PriorityQueue, which is actually a min
 		 * PQ when I need a max PQ.
 		 */
-		// TODO: double check that this does what it's supposed to
 		public int compareTo(ReputationEntity other) {
 			ReputationEntity otherEntity = (ReputationEntity) other;
 			double diff = this.getReputation() - otherEntity.getReputation();

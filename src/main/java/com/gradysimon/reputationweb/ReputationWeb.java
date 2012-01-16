@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
@@ -26,11 +27,12 @@ public class ReputationWeb extends JavaPlugin {
 	protected FileConfiguration config;
 	private Server server;
 	private ReputationGraph reputationGraph;
+	private PluginDescriptionFile description;
 
 	private EbeanServer database;
 
 	public void onEnable() {
-		server = this.getServer();
+		loadPluginEnvironment();
 		startLogging();
 		loadConfiguration();
 		instantiateReputationGraph();
@@ -40,7 +42,8 @@ public class ReputationWeb extends JavaPlugin {
 	}
 
 	public void onDisable() {
-		log.info("Reputation Web disabled."); // TODO
+		log.info(formatLog(description.getFullName() + ", version "
+				+ description.getVersion() + " disabled."));
 	}
 
 	// Overridden to return the correct list of persistence classes
@@ -54,74 +57,66 @@ public class ReputationWeb extends JavaPlugin {
 		return getDatabase();
 	}
 
+	private void loadPluginEnvironment() {
+		this.server = getServer();
+		this.description = getDescription();
+	}
+
 	private void startLogging() {
 		log = Logger.getLogger("Minecraft");
-		log.info("Reputation Web enabled."); // TODO Confirm log message
+		log.info(description.getFullName() + " enabled. Author: "
+				+ description.getAuthors().get(0) + ".");
+	}
+
+	private String formatLog(String message) {
+		return description.getName() + ": " + message;
 	}
 
 	private void loadConfiguration() {
 		File configFile = new File(getDataFolder(), "config.yml");
 		if (!configFile.exists()) {
 			// If it doesn't exist, we need to generate it for next time.
+			log.info(formatLog("No " + description.getName()
+					+ " config.yml found."));
 			writeDefaultConfigFile();
 		}
 		config = getConfig();
 	}
 
 	private void writeDefaultConfigFile() {
-		// TODO: message here to indicate default config is being written.
 		// configFileInData is the config.yml file that is in the plugin's data
 		// folder inside the plugin directory (not in .jar)
+		log.info(formatLog("Writing default config.yml to plugins/" + description.getName() + "/"));
 		File configFileInData = new File(getDataFolder(), "config.yml");
 		if (!getDataFolder().exists()) {
 			getDataFolder().mkdirs();
 		}
-		if (!configFileInData.exists()) {
-			try {
+		try {
+			if (!configFileInData.exists()) {
 				configFileInData.createNewFile();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
 			}
-		}
-		// embeddedConfigFile is a default config.yml that is inside the .jar
-		InputStream embeddedConfigFile = getResource("config.yml");
-		OutputStream configFileOutput;
-		try {
-			configFileOutput = new FileOutputStream(configFileInData);
-		} catch (FileNotFoundException e) {
-			// TODO Add logging message here
-			e.printStackTrace();
-			return;
-		}
-		byte[] buffer = new byte[1024]; // input buffer
-		int length; // length actually read
-		try {
+			// embeddedConfigFile is a default config.yml that is inside the
+			// .jar
+			InputStream embeddedConfigFile = getResource("config.yml");
+			OutputStream configFileOutput;
+			try {
+				configFileOutput = new FileOutputStream(configFileInData);
+			} catch (FileNotFoundException e) {
+				log.warning(formatLog("Unable to write config file to resource directory."));
+				log.info(formatLog("Forced to rely on default configuration."));
+				e.printStackTrace();
+				return;
+			}
+			byte[] buffer = new byte[1024]; // input buffer
+			int length; // length actually read
 			while ((length = embeddedConfigFile.read(buffer)) > 0) {
-				try {
-					configFileOutput.write(buffer, 0, length);
-				} catch (IOException e) {
-					// TODO Add logging message here
-					e.printStackTrace();
-					return;
-				}
+				configFileOutput.write(buffer, 0, length);
 			}
-		} catch (IOException e) {
-			// TODO Add logging message here
-			e.printStackTrace();
-			return;
-		}
-		try {
 			embeddedConfigFile.close();
-		} catch (IOException e) {
-			// TODO Add logging message here
-			e.printStackTrace();
-			return;
-		}
-		try {
 			configFileOutput.close();
 		} catch (IOException e) {
-			// TODO Add logging message here
+			log.warning(formatLog("Unable to write config file to resource directory."));
+			log.info(formatLog("Forced to rely on default configuration."));
 			e.printStackTrace();
 			return;
 		}
@@ -139,9 +134,9 @@ public class ReputationWeb extends JavaPlugin {
 		try {
 			database.find(Trust.class).findRowCount();
 		} catch (PersistenceException ex) {
-			// TODO: installing DB message
+			log.info(formatLog("No existing reputation data found."));
+			log.info(formatLog("Initializing database."));
 			installDDL();
-			database = getDatabase(); // not sure if necessary
 		}
 	}
 
@@ -149,12 +144,10 @@ public class ReputationWeb extends JavaPlugin {
 		File ebeanDotProperties = new File("ebean.properties");
 		try {
 			if (ebeanDotProperties.createNewFile()) {
-				// TODO: Logging message that ebean.properties was created by
-				// this plugin.
+				log.info(formatLog("Creating ebean.properties file. This file will be empty. This is normal."));
 			}
 		} catch (IOException e) {
-			// TODO: message that ebean.properties could not be created and to
-			// ignore the warning message. (? or not. Decide).
+			log.warning(formatLog("Unable to write ebean.properties file."));
 			e.printStackTrace();
 		}
 

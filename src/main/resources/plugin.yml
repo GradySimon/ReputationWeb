@@ -1,7 +1,7 @@
 name: ReputationWeb
 main: com.gradysimon.reputationweb.ReputationWeb
 version: 0.1
-author: Grady Simon (genre)
+author: Grady Simon (Genre)
 database: true
 commands:
   rep:

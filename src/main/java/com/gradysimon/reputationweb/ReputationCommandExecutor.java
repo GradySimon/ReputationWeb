@@ -42,10 +42,10 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		label = label.toLowerCase();
 		if (label.equals("rep") || label.equals("reputation")) {
 			return dispatchReputationCommand(sender, args);
-		} else if (label.equals("trust")) {
+		} else if (label.equals("trust") && args.length > 0) {
 			trustCommand(sender, args[0]);
 			return true;
-		} else if (label.equals("untrust")) {
+		} else if (label.equals("untrust") && args.length > 0) {
 			untrustCommand(sender, args[0]);
 			return true;
 		}
@@ -58,14 +58,14 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	{
 		if (args.length > 0) {
 			String firstArg = args[0].toLowerCase();
-			if (firstArg.equals("trust")) {
+			if (firstArg.equals("trust") && args.length > 1) {
 				trustCommand(sender, args[1]);
 				return true;
-			} else if (firstArg.equals("untrust")) {
+			} else if (firstArg.equals("untrust") && args.length > 1) {
 				untrustCommand(sender, args[1]);
 			} else if (firstArg.equals("info")) {
 				infoCommand(sender, args);
-			} else if (firstArg.equals("connection")) {
+			} else if (firstArg.equals("connection") && args.length > 2) {
 				referralCommand(sender, args);
 			}
 		}
