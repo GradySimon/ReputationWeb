@@ -28,7 +28,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	private final String connectionSelfPermissionNode = "reputationweb.connection.self";
 	private final String connectionAllPermissionNode = "reputationweb.connection.all";
 
-	public ReputationCommandExecutor(ReputationWeb plugin,
+	ReputationCommandExecutor(ReputationWeb plugin,
 			ReputationGraph reputationGraph, Server server) {
 		this.plugin = plugin;
 		this.reputationGraph = reputationGraph;

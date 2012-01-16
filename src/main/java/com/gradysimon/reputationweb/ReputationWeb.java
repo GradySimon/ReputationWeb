@@ -39,6 +39,21 @@ public class ReputationWeb extends JavaPlugin {
 		initializeCommandHandler();
 	}
 
+	public void onDisable() {
+		log.info("Reputation Web disabled."); // TODO
+	}
+
+	// Overridden to return the correct list of persistence classes
+	public List<Class<?>> getDatabaseClasses() {
+		List<Class<?>> persistentClassList = new ArrayList<Class<?>>();
+		persistentClassList.add(Trust.class);
+		return persistentClassList;
+	}
+
+	EbeanServer getPluginDatabase() {
+		return getDatabase();
+	}
+
 	private void startLogging() {
 		log = Logger.getLogger("Minecraft");
 		log.info("Reputation Web enabled."); // TODO Confirm log message
@@ -145,13 +160,6 @@ public class ReputationWeb extends JavaPlugin {
 
 	}
 
-	// Overridden to return the correct list of persistence classes
-	public List<Class<?>> getDatabaseClasses() {
-		List<Class<?>> persistentClassList = new ArrayList<Class<?>>();
-		persistentClassList.add(Trust.class);
-		return persistentClassList;
-	}
-
 	private void loadReputationData() {
 		populateReputationGraph(getTrustsFromDatabase());
 	}
@@ -175,10 +183,6 @@ public class ReputationWeb extends JavaPlugin {
 		return allTrusts;
 	}
 
-	EbeanServer getPluginDatabase() {
-		return getDatabase();
-	}
-
 	private void initializeCommandHandler() {
 		reputationCommandExecutor = new ReputationCommandExecutor(this,
 				reputationGraph, server);
@@ -186,9 +190,5 @@ public class ReputationWeb extends JavaPlugin {
 		getCommand("rep").setExecutor(reputationCommandExecutor);
 		getCommand("trust").setExecutor(reputationCommandExecutor);
 		getCommand("untrust").setExecutor(reputationCommandExecutor);
-	}
-
-	public void onDisable() {
-		log.info("Reputation Web disabled."); // TODO
 	}
 }

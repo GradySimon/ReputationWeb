@@ -55,7 +55,7 @@ public class ReputationGraph {
 	 * Determines how strongly the reputation of the truster affects the
 	 * reputation of the trustee. Should be less than 1 and greater than 0.
 	 */
-	public final double flowMultiplier;
+	private final double flowMultiplier;
 
 	/**
 	 * Determines how many degrees away from a player in the reputation web
@@ -64,11 +64,11 @@ public class ReputationGraph {
 	 * other. If player2 then vouches for player1, player2 is 2 degrees from
 	 * player0, and so on.
 	 */
-	public final int maxChainLength;
+	private final int maxChainLength;
 
 	private Map<OfflinePlayer, ReputationEntity> playerEntityMap = new HashMap<OfflinePlayer, ReputationEntity>();
 
-	public ReputationGraph(double flowMultiplier, int maxChainLength) {
+	ReputationGraph(double flowMultiplier, int maxChainLength) {
 		this.flowMultiplier = flowMultiplier;
 		this.maxChainLength = maxChainLength;
 	}
@@ -100,7 +100,7 @@ public class ReputationGraph {
 	 * @param trustee
 	 *            The player who should now be trusted by the truster
 	 */
-	public void addTrustRelation(OfflinePlayer truster, OfflinePlayer trustee) {
+	void addTrustRelation(OfflinePlayer truster, OfflinePlayer trustee) {
 		if (!playerIsInGraph(truster)) {
 			addPlayerToGraph(truster);
 		}
@@ -124,7 +124,7 @@ public class ReputationGraph {
 	 * @param trustee
 	 *            The trustee that should no longer be trusted by the truster
 	 */
-	public void removeTrustRelation(OfflinePlayer truster, OfflinePlayer trustee)
+	void removeTrustRelation(OfflinePlayer truster, OfflinePlayer trustee)
 	{
 		if (playerIsInGraph(truster) && playerIsInGraph(trustee)) {
 			ReputationEntity trusterEntity = getEntity(truster);
@@ -275,10 +275,6 @@ public class ReputationGraph {
 		return new ArrayList<OfflinePlayer>();
 	}
 
-	private void addPlayerToGraph(OfflinePlayer player) {
-		playerEntityMap.put(player, new ReputationEntity(player));
-	}
-
 	/**
 	 * Returns true if the player is represented in the graph.
 	 * 
@@ -288,6 +284,10 @@ public class ReputationGraph {
 	 */
 	public boolean playerIsInGraph(OfflinePlayer player) {
 		return playerEntityMap.containsKey(player);
+	}
+
+	private void addPlayerToGraph(OfflinePlayer player) {
+		playerEntityMap.put(player, new ReputationEntity(player));
 	}
 
 	/**
@@ -473,23 +473,23 @@ public class ReputationGraph {
 		 * @return true if this ReputationEntity trusts the trusteeEntity, false
 		 *         otherwise.
 		 */
-		public boolean trustsEntity(ReputationEntity trusteeEntity) {
+		boolean trustsEntity(ReputationEntity trusteeEntity) {
 			return trustees.contains(trusteeEntity);
 		}
 
-		public void removeTruster(ReputationEntity trusterEntity) {
+		void removeTruster(ReputationEntity trusterEntity) {
 			this.trusters.remove(trusterEntity);
 		}
 
-		public void removeTrustee(ReputationEntity trusteeEntity) {
+		void removeTrustee(ReputationEntity trusteeEntity) {
 			this.trustees.remove(trusteeEntity);
 		}
 
-		private void addTruster(ReputationEntity truster) {
+		void addTruster(ReputationEntity truster) {
 			this.trusters.add(truster);
 		}
 
-		private void addTrustee(ReputationEntity trustee) {
+		void addTrustee(ReputationEntity trustee) {
 			this.trustees.add(trustee);
 		}
 
