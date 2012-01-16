@@ -184,6 +184,8 @@ public class ReputationWeb extends JavaPlugin {
 				reputationGraph, server);
 		getCommand("reputation").setExecutor(reputationCommandExecutor);
 		getCommand("rep").setExecutor(reputationCommandExecutor);
+		getCommand("trust").setExecutor(reputationCommandExecutor);
+		getCommand("untrust").setExecutor(reputationCommandExecutor);
 	}
 
 	public void onDisable() {

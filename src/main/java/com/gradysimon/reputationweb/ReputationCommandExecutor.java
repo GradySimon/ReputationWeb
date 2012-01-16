@@ -18,6 +18,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	ReputationWeb plugin;
 	ReputationGraph reputationGraph;
 	Server server;
+	
 	private final int numOfTopTrusters = 3;
 
 	private final String trustPermissionNode = "reputationweb.trust";
@@ -36,19 +37,15 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args)
 	{
-		// TODO: DEBUGGING CODE
-		System.out.println("onCommand() recieved command: /" + label);
-		for (int i = 0; i < args.length; i++) {
-			System.out.println("Argument " + i + ": " + args[i]);
-		}
-		// END DEBUG CODE
 		label = label.toLowerCase();
 		if (label.equals("rep") || label.equals("reputation")) {
 			return dispatchReputationCommand(sender, args);
 		} else if (label.equals("trust")) {
 			trustCommand(sender, args[0]);
+			return true;
 		} else if (label.equals("untrust")) {
 			untrustCommand(sender, args[0]);
+			return true;
 		}
 		return false;
 	}
