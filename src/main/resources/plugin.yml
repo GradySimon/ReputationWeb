@@ -2,6 +2,7 @@ name: ReputationWeb
 main: com.gradysimon.reputationweb.ReputationWeb
 version: 0.1
 author: Grady Simon (genre)
+database: true
 commands:
   rep:
     alias: [reputation]

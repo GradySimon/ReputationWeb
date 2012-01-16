@@ -10,9 +10,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.Query;
+
 public class ReputationCommandExecutor implements CommandExecutor {
 
-	ReputationWeb mainClass;
+	ReputationWeb plugin;
 	ReputationGraph reputationGraph;
 	Server server;
 	private final int numOfTopTrusters = 3;
@@ -23,9 +26,9 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	private final String connectionSelfPermissionNode = "reputationweb.connection.self";
 	private final String connectionAllPermissionNode = "reputationweb.connection.all";
 
-	public ReputationCommandExecutor(ReputationWeb mainClass,
+	public ReputationCommandExecutor(ReputationWeb plugin,
 			ReputationGraph reputationGraph, Server server) {
-		this.mainClass = mainClass;
+		this.plugin = plugin;
 		this.reputationGraph = reputationGraph;
 		this.server = server;
 	}
@@ -91,10 +94,19 @@ public class ReputationCommandExecutor implements CommandExecutor {
 					ReputationWebMessages.alreadyTrustsPlayerError(otherPlayer));
 			return true;
 		}
+		addTrustToDatabase(senderPlayer.getName(), otherPlayer.getName());
 		reputationGraph.addTrustRelation(senderPlayer, otherPlayer);
 		sendMessage(sender,
 				ReputationWebMessages.trustSuccessMessage(otherPlayer));
 		return true;
+	}
+
+	private void addTrustToDatabase(String truster, String trustee) {
+		Trust trust = new Trust();
+		trust.setTrusterName(truster);
+		trust.setTrusteeName(trustee);
+		EbeanServer database = plugin.getPluginDatabase();
+		database.save(trust);
 	}
 
 	private boolean untrustCommand(CommandSender sender, String[] args) {
@@ -128,9 +140,17 @@ public class ReputationCommandExecutor implements CommandExecutor {
 					ReputationWebMessages.doesNotTrustPlayerError(otherPlayer));
 			return true;
 		}
+		removeTrustFromDatabase(senderPlayer.getName(), otherPlayer.getName());
 		reputationGraph.removeTrustRelation(senderPlayer, otherPlayer);
 		// TODO: Untrust success message
 		return true;
+	}
+
+	private void removeTrustFromDatabase(String truster, String trustee) {
+		EbeanServer database = plugin.getPluginDatabase();
+		Query<Trust> query = database.find(Trust.class);
+		Trust trust = query.where().eq("trusterName", truster).eq("trusteeName", trustee).findUnique();
+		database.delete(trust);		
 	}
 
 	private boolean referralCommand(CommandSender sender, String[] args) {
@@ -400,7 +420,8 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		System.out.println("Ingoing name to getRealPlayer(): " + name);
 		// END DEBUGGING CODE
 		OfflinePlayer potentialPlayer = server.getOfflinePlayer(name);
-		if (potentialPlayer.hasPlayedBefore() || reputationGraph.playerIsInGraph(potentialPlayer)) {
+		if (potentialPlayer.hasPlayedBefore()
+				|| reputationGraph.playerIsInGraph(potentialPlayer)) {
 			// TODO: DEBUGGING CODE
 			System.out.println("Name of outgoing OfflinePlayer: "
 					+ potentialPlayer.getName());
@@ -417,9 +438,11 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		}
 		return nameList;
 	}
+
 	// TODO DEBUGGING CODE
 	private void debugPrintOfflinePlayers() {
-		System.out.println("Printing all players who have ever played on this server:");
+		System.out
+				.println("Printing all players who have ever played on this server:");
 		for (OfflinePlayer player : server.getOfflinePlayers()) {
 			System.out.println(player.getName());
 		}
