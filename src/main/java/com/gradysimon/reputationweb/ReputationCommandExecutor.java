@@ -75,34 +75,30 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private void trustCommand(CommandSender sender, String targetName) {
 		if (!isOnlinePlayer(sender)) {
-			sendMessage(sender, ReputationWebMessages.mustBePlayerError());
+			RWChatOutput.mustBePlayerError(sender);
 			return;
 		}
 		Player senderPlayer = (Player) sender;
 		if (!hasPermission(senderPlayer, trustPermissionNode)) {
-			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			RWChatOutput.lacksPermissionError(sender);
 			return;
 		}
 		OfflinePlayer otherPlayer = getRealPlayer(targetName);
 		if (otherPlayer == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(targetName));
+			RWChatOutput.playerDoesNotExistError(sender, targetName);
 			return;
 		}
 		if (senderPlayer == otherPlayer) {
-			sendMessage(sender, ReputationWebMessages.cannotTrustSelfError());
+			RWChatOutput.cannotTrustSelfError(sender);
 			return;
 		}
 		if (reputationGraph.trustRelationExists(senderPlayer, otherPlayer)) {
-			sendMessage(sender,
-					ReputationWebMessages.alreadyTrustsPlayerError(otherPlayer));
+			RWChatOutput.alreadyTrustsPlayerError(sender, otherPlayer);
 			return;
 		}
 		addTrustToDatabase(senderPlayer.getName(), otherPlayer.getName());
 		reputationGraph.addTrustRelation(senderPlayer, otherPlayer);
-		sendMessage(sender,
-				ReputationWebMessages.trustSuccessMessage(otherPlayer));
-		return;
+		RWChatOutput.trustSuccessMessage(sender, otherPlayer);
 	}
 
 	private void addTrustToDatabase(String truster, String trustee) {
@@ -115,28 +111,26 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private void untrustCommand(CommandSender sender, String targetName) {
 		if (!isOnlinePlayer(sender)) {
-			sendMessage(sender, ReputationWebMessages.mustBePlayerError());
+			RWChatOutput.mustBePlayerError(sender);
 			return;
 		}
 		Player senderPlayer = (Player) sender;
 		if (!hasPermission(senderPlayer, trustPermissionNode)) {
-			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			RWChatOutput.lacksPermissionError(sender);
 			return;
 		}
 		OfflinePlayer otherPlayer = getRealPlayer(targetName);
 		if (otherPlayer == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(targetName));
+			RWChatOutput.playerDoesNotExistError(sender, targetName);
 			return;
 		}
 		if (!reputationGraph.trustRelationExists(senderPlayer, otherPlayer)) {
-			sendMessage(sender,
-					ReputationWebMessages.doesNotTrustPlayerError(otherPlayer));
+			RWChatOutput.doesNotTrustPlayerError(sender, otherPlayer);
 			return;
 		}
 		removeTrustFromDatabase(senderPlayer.getName(), otherPlayer.getName());
 		reputationGraph.removeTrustRelation(senderPlayer, otherPlayer);
-		// TODO: Untrust success message
+		RWChatOutput.untrustSuccessMessage(sender, otherPlayer);
 		return;
 	}
 
@@ -162,66 +156,60 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private void selfReferralCommand(CommandSender sender, String[] args) {
 		if (!isOnlinePlayer(sender)) {
-			sendMessage(sender,
-					ReputationWebMessages.mustBePlayerOrAddArgsError());
+			RWChatOutput.mustBePlayerOrAddArgsError(sender);
+			return;
 		}
 		Player senderPlayer = (Player) sender;
 		if (!hasPermission(senderPlayer, connectionSelfPermissionNode)) {
-			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			RWChatOutput.lacksPermissionError(sender);
+			return;
 		}
 		OfflinePlayer otherPlayer = getRealPlayer(args[1]);
 		if (otherPlayer == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(args[1]));
+			RWChatOutput.playerDoesNotExistError(sender, args[1]);
+			return;
 		}
 		List<OfflinePlayer> path = reputationGraph.getReference(senderPlayer,
 				otherPlayer);
 		if (path == null) {
-			sendMessage(sender,
-					ReputationWebMessages.noTrustPathExistsMessage(otherPlayer));
+			RWChatOutput.noTrustPathExistsMessage(sender, otherPlayer);
+			return;
 		}
 		List<String> namesInPath = convertToNameList(path);
-		// TODO: Move generation of this output to ReputationWebMessages.
-		List<String> output = generateReferralOutput(namesInPath,
+		 referralCommandOutput(sender, namesInPath,
 				senderPlayer.getName(), otherPlayer.getName());
-		sendMessage(sender, output);
 	}
 
 	private void otherReferralCommand(CommandSender sender, String[] args) {
 		if (isOnlinePlayer(sender)) {
 			if (!hasPermission((Player) sender, connectionAllPermissionNode)) {
-				sendMessage(sender,
-						ReputationWebMessages.lacksPermissionError());
+				RWChatOutput.lacksPermissionError(sender);
 				return;
 			}
 		}
 		OfflinePlayer startPlayer = getRealPlayer(args[1]);
 		OfflinePlayer endPlayer = getRealPlayer(args[2]);
 		if (startPlayer == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(args[1]));
+			RWChatOutput.playerDoesNotExistError(sender, args[1]);
 			return;
 		}
 		if (endPlayer == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(args[2]));
+			RWChatOutput.playerDoesNotExistError(sender, args[2]);
 			return;
 		}
 		List<OfflinePlayer> path = reputationGraph.getReference(startPlayer,
 				endPlayer);
 		if (path == null) {
-			sendMessage(sender, ReputationWebMessages.noTrustPathExistsMessage(
-					startPlayer, endPlayer));
+			RWChatOutput.noTrustPathExistsMessage(sender, startPlayer,
+					endPlayer);
 			return;
 		}
 		List<String> namesInPath = convertToNameList(path);
-		List<String> output = generateReferralOutput(namesInPath,
+		referralCommandOutput(sender, namesInPath,
 				startPlayer.getName(), endPlayer.getName());
-		sendMessage(sender, output);
-		return;
 	}
 
-	private List<String> generateReferralOutput(List<String> path,
+	private void referralCommandOutput(CommandSender sender, List<String> path,
 			String startName, String endName)
 	{
 		List<String> output = new ArrayList<String>();
@@ -232,7 +220,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			pathString += " -> " + name;
 		}
 		output.add(pathString);
-		return output;
+		RWChatOutput.sendMessage(sender, output);
 	}
 
 	private boolean infoCommand(CommandSender sender, String[] args) {
@@ -249,31 +237,27 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 	private void selfInfoCommand(CommandSender sender) {
 		if (!isOnlinePlayer(sender)) {
-			sendMessage(sender,
-					ReputationWebMessages.mustBePlayerOrAddArgsError());
+			RWChatOutput.mustBePlayerOrAddArgsError(sender);
 			return;
 		}
 		Player player = (Player) sender;
 		if (!hasPermission(player, infoSelfPermissionNode)) {
-			sendMessage(sender, ReputationWebMessages.lacksPermissionError());
+			RWChatOutput.lacksPermissionError(sender);
 			return;
 		}
-
 		coreInfoCommand(sender, player);
 	}
 
 	private void otherInfoCommand(CommandSender sender, String[] args) {
 		if (isOnlinePlayer(sender)) {
 			if (!hasPermission((Player) sender, infoAllPermissionNode)) {
-				sendMessage(sender,
-						ReputationWebMessages.lacksPermissionError());
+				RWChatOutput.lacksPermissionError(sender);
 				return;
 			}
 		}
 		OfflinePlayer player = getRealPlayer(args[1]);
 		if (player == null) {
-			sendMessage(sender,
-					ReputationWebMessages.playerDoesNotExistError(args[1]));
+			RWChatOutput.playerDoesNotExistError(sender, args[1]);
 			return;
 		}
 		coreInfoCommand(sender, player);
@@ -286,13 +270,12 @@ public class ReputationCommandExecutor implements CommandExecutor {
 
 		List<OfflinePlayer> topTrusters = reputationGraph.getTopTrusters(
 				player, numOfTopTrusters);
-		List<String> output = generateInfoOutput(player.getName(), reputation,
+		infoCommandOutput(sender, player.getName(), reputation,
 				numberOfTrusters, numberOfTrustees, topTrusters);
-		sendMessage(sender, output);
 		return;
 	}
-
-	private List<String> generateInfoOutput(String playerName,
+	
+	private void infoCommandOutput(CommandSender sender, String playerName,
 			double reputation, int numberOfTrusters, int numberOfTrustees,
 			List<OfflinePlayer> topTrusters)
 	{
@@ -320,21 +303,12 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			}
 		}
 		output.add(topTrustersOutput);
-		return output;
+		RWChatOutput.sendMessage(sender, output);
 	}
+	
 
 	private boolean hasPermission(Player player, String permissionNode) {
 		return player.hasPermission(permissionNode);
-	}
-
-	private void sendMessage(CommandSender sender, List<String> message) {
-		for (String line : message) {
-			sendMessage(sender, line);
-		}
-	}
-
-	private void sendMessage(CommandSender sender, String message) {
-		sender.sendMessage(message);
 	}
 
 	private boolean isOnlinePlayer(CommandSender sender) {
