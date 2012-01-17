@@ -14,6 +14,9 @@ Refactor code to better adhere to clean code principles (especially the commands
 ++++++++++++++
 +++ Future +++
 
+Make player names non-case sensitive
+     Maybe only when they are already in the web? That should be easier.
+
 Make help for commands invisible to players without permission
 
 Integrate with chat plugins
