@@ -1,9 +1,13 @@
 package com.gradysimon.reputationweb;
 
+import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,6 +22,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	ReputationGraph reputationGraph;
 	Server server;
 	RWChatOutputManager output;
+	Set<OfflinePlayer> havePlayedBefore = new HashSet<OfflinePlayer>();
 
 	private final int numOfTopTrusters = 5;
 
@@ -33,6 +38,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		this.reputationGraph = reputationGraph;
 		this.server = server;
 		output = new RWChatOutputManager(reputationGraph);
+		loadPlayersWhoHavePlayedBefore();
 	}
 
 	public boolean onCommand(CommandSender sender, Command command,
@@ -51,7 +57,23 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		return false;
 	}
 
-	// TODO: should I have a help command?
+	private void helpCommand(CommandSender sender, String[] args) {
+		if (args.length == 1) {
+			output.generalHelp(sender);
+		} else if (args.length > 1) {
+			if (args[1].equals("trust")) {
+				output.trustHelp(sender);
+			} else if (args[1].equals("untrust")) {
+				output.untrustHelp(sender);
+			} else if (args[1].equals("info")) {
+				output.infoHelp(sender);
+			} else if (args[1].equals("connection")) {
+				output.connectionHelp(sender);
+			}
+		}
+
+	}
+
 	private boolean dispatchReputationCommand(CommandSender sender,
 			String[] args)
 	{
@@ -68,6 +90,9 @@ public class ReputationCommandExecutor implements CommandExecutor {
 				return true;
 			} else if (firstArg.equals("connection") && args.length > 1) {
 				referralCommand(sender, args);
+				return true;
+			} else if (firstArg.equals("help")) {
+				helpCommand(sender, args);
 				return true;
 			}
 		}
@@ -181,8 +206,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			output.noTrustPathExistsMessage(sender, otherPlayer);
 			return;
 		}
-		output.referralCommandOutput(sender, path, senderPlayer,
-				otherPlayer);
+		output.referralCommandOutput(sender, path, senderPlayer, otherPlayer);
 	}
 
 	private void otherReferralCommand(CommandSender sender, String[] args) {
@@ -208,8 +232,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 			output.noTrustPathExistsMessage(sender, startPlayer, endPlayer);
 			return;
 		}
-		output.referralCommandOutput(sender, path, startPlayer,
-				endPlayer);
+		output.referralCommandOutput(sender, path, startPlayer, endPlayer);
 	}
 
 	private boolean infoCommand(CommandSender sender, String[] args) {
@@ -275,12 +298,49 @@ public class ReputationCommandExecutor implements CommandExecutor {
 	 * @return The Player object with the specified name. Returns null if the
 	 *         player by that name has never been on the server before.
 	 */
+	// The layout of this method seems funky, but it is like that to avoid as
+	// much as possible the expensive hasPlayedBefore() method.
 	private OfflinePlayer getRealPlayer(String name) {
 		OfflinePlayer potentialPlayer = server.getOfflinePlayer(name);
-		if (potentialPlayer.hasPlayedBefore()
-				|| reputationGraph.playerIsInGraph(potentialPlayer)) {
+		if (reputationGraph.playerIsInGraph(potentialPlayer)) {
+			return potentialPlayer;
+		}
+		if (hasPlayedBefore(potentialPlayer)) {
 			return potentialPlayer;
 		}
 		return null;
+	}
+
+	private boolean hasPlayedBefore(OfflinePlayer player) {
+		if (havePlayedBefore.contains(player)) {
+			return true;
+		}
+		String playerName = player.getName();
+		List<World> worlds = server.getWorlds();
+		for (World world : worlds) {
+			File playersFolder = new File(world.getWorldFolder(), "players");
+			for (File playerFile : playersFolder.listFiles()) {
+				String fileName = playerFile.getName();
+				String noExtension = fileName.substring(0,
+						fileName.length() - 4);
+				if (noExtension.equals(playerName)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private void loadPlayersWhoHavePlayedBefore() {
+		List<World> worlds = server.getWorlds();
+		for (World world : worlds) {
+			File playersFolder = new File(world.getWorldFolder(), "players");
+			for (File playerFile : playersFolder.listFiles()) {
+				String fileName = playerFile.getName();
+				String noExtension = fileName.substring(0,
+						fileName.length() - 4);
+				havePlayedBefore.add(server.getOfflinePlayer(noExtension));
+			}
+		}
 	}
 }

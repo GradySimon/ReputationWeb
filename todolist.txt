@@ -14,6 +14,8 @@ Refactor code to better adhere to clean code principles (especially the commands
 ++++++++++++++
 +++ Future +++
 
+Make help for commands invisible to players without permission
+
 Integrate with chat plugins
 
 Write some sort of API?

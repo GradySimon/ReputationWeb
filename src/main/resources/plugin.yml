@@ -6,27 +6,22 @@ database: true
 commands:
   rep:
     alias: [reputation]
-    description: All of the Reputation Web commands
+    description: All of the ReputationWeb commands
+    usage: Type "/rep help" for help with ReputationWeb commands.
   reputation:
       alias: [rep]
-      description: All of the Reputation Web commands
-      usage: |
-          /<command> trust <player>  - Trust the specified player
-          /<command> untrust <player> - Stop trusting the specified player
-          /<command> info - Display reputation information about yourself
-          /<command> info <player> - Display reputation information about the specified player
-          /<command> connection <player> - Find a connection of trust between you and the specified player
-          /<command> connection <player> <player> - Find a connection of trust from the first player to the second player
+      description: All of the ReputationWeb commands
+      usage: Type "/rep help" for help with ReputationWeb commands.
   trust:
       description: Same as /reputation trust. Trust the specified player.
-      usage: /<command> <player> - Trust the specified player
+      usage: Type "/rep help trust" for help with the untrust command.
   untrust:
       description: Same as /reputation untrust. Trust the specified player.
-      usage: /<command> <player> - Stop trusting the specified player.
+      usage: Type "/rep help untrust" for help with the trust command.
 
 permissions:
   reputationweb.*:
-    description: Gives access to all Reputation Web commands.
+    description: Gives access to all ReputationWeb commands.
     children:
       reputationweb.trust: true
       reputationweb.info.all: true

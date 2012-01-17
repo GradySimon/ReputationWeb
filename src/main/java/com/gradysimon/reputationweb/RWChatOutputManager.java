@@ -51,6 +51,11 @@ class RWChatOutputManager {
 		sendMessage(recipient, message);
 	}
 
+	void cannotTrustSelfError(CommandSender recipient) {
+		String message = formatError("You can only trust other players.");
+		sendMessage(recipient, message);
+	}
+
 	void noTrustPathExistsMessage(CommandSender recipient, OfflinePlayer player)
 	{
 		String message = formatNorm("There is no path of trust between you and player ")
@@ -78,22 +83,6 @@ class RWChatOutputManager {
 		String message = formatNorm("Success. You no longer trust ")
 				+ formatPlayer(player) + formatNorm(".");
 		sendMessage(recipient, message);
-	}
-
-	void cannotTrustSelfError(CommandSender recipient) {
-		String message = formatError("You can only trust other players.");
-		sendMessage(recipient, message);
-	}
-
-	void sendMessage(CommandSender recipient, List<String> message) {
-		for (String line : message) {
-			sendMessage(recipient, line);
-
-		}
-	}
-
-	void sendMessage(CommandSender recipient, String message) {
-		recipient.sendMessage(message);
 	}
 
 	void playerTrustedMessage(Player player, OfflinePlayer truster) {
@@ -164,6 +153,95 @@ class RWChatOutputManager {
 		sendMessage(sender, output);
 	}
 
+	void generalHelp(CommandSender sender) {
+		List<String> output = new ArrayList<String>();
+		String message = formatHelp("Type ") + formatCommand("/rep help <command>");
+		message += formatHelp(" for command-specfic help, e.g. ");
+		message += formatCommand("/rep help trust");
+		output.add(message);
+		message = formatHelp("Available commands: ");
+		output.add(message);
+		output.add(formatCommand("/rep trust <player>"));
+		output.add(formatCommand("/rep untrust <player>"));
+		output.add(formatCommand("/rep info <player>"));
+		output.add(formatCommand("/rep connection <player>"));
+		sendMessage(sender, output);
+	}
+
+	void trustHelp(CommandSender sender) {
+		List<String> output = new ArrayList<String>();
+		String message = "";
+		message = formatHelp("Usage: ");
+		message += formatCommand("/trust <player>");
+		message += formatHelp(" or ");
+		message += formatCommand("/rep trust <player>");
+		output.add(message);
+		message = formatHelp("Trust the specified player.");
+		output.add(message);
+		sendMessage(sender, output);
+	}
+
+	void untrustHelp(CommandSender sender) {
+		List<String> output = new ArrayList<String>();
+		String message = "";
+		message = formatHelp("Usage: ");
+		message += formatCommand("/untrust <player>");
+		message += formatHelp(" or ");
+		message += formatCommand("/rep untrust <player>");
+		output.add(message);
+		message = formatHelp("Stop trusting the specified player.");
+		output.add(message);
+		sendMessage(sender, output);
+	}
+
+	void infoHelp(CommandSender sender) {
+		List<String> output = new ArrayList<String>();
+		String message = "";
+		message = formatHelp("Usage: ");
+		message += formatCommand("/rep info");
+		message += formatHelp(" or ");
+		message += formatCommand("/rep info <player>");
+		output.add(message);
+		message = formatHelp("Display reputation information about the "
+				+ "specified player.");
+		output.add(message);
+		message = formatHelp("If no player is specified, display "
+				+ "reputation information about yourself.");
+		output.add(message);
+		sendMessage(sender, output);
+	}
+
+	void connectionHelp(CommandSender sender) {
+		List<String> output = new ArrayList<String>();
+		String message = "";
+		message = formatHelp("Usage: ");
+		message += formatCommand("/rep connection <player>");
+		message += formatHelp(" or ");
+		message += formatCommand("/rep connection <player> <player>");
+		output.add(message);
+		message = formatHelp("Find a path of trust between you and the "
+				+ "specified player.");
+		output.add(message);
+		message = formatHelp("If two players are specified, find a path "
+				+ "between them.");
+		output.add(message);
+		sendMessage(sender, output);
+	}
+
+	void sendMessage(CommandSender recipient, List<String> message) {
+		for (String line : message) {
+			sendMessage(recipient, line);
+	
+		}
+	}
+
+	void sendMessage(CommandSender recipient, String message) {
+		if (!(recipient instanceof Player)) {
+			message = ChatColor.stripColor(message);
+		}
+		recipient.sendMessage(message);
+	}
+
 	private static String formatHeader(String string) {
 		return formatNorm(string);
 	}
@@ -201,5 +279,13 @@ class RWChatOutputManager {
 
 	private static String formatNorm(String message) {
 		return ChatColor.GREEN + message;
+	}
+
+	private String formatCommand(String string) {
+		return ChatColor.YELLOW + string;
+	}
+
+	private String formatHelp(String string) {
+		return formatNorm(string);
 	}
 }
