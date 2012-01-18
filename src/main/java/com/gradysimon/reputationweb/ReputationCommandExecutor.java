@@ -38,7 +38,7 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		this.reputationGraph = reputationGraph;
 		this.server = server;
 		output = new RWChatOutputManager(reputationGraph);
-		loadPlayersWhoHavePlayedBefore();
+		loadPlayersWhoHavePlayed();
 	}
 
 	public boolean onCommand(CommandSender sender, Command command,
@@ -319,11 +319,10 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		List<World> worlds = server.getWorlds();
 		for (World world : worlds) {
 			File playersFolder = new File(world.getWorldFolder(), "players");
-			for (File playerFile : playersFolder.listFiles()) {
-				String fileName = playerFile.getName();
-				String noExtension = fileName.substring(0,
-						fileName.length() - 4);
-				if (noExtension.equals(playerName)) {
+			if (!playersFolder.exists()) break;
+			for (String fileName : playersFolder.list()) {
+				String name = fileName.substring(0, fileName.length() - 4);
+				if (name.equals(playerName)) {
 					return true;
 				}
 			}
@@ -331,15 +330,14 @@ public class ReputationCommandExecutor implements CommandExecutor {
 		return false;
 	}
 
-	private void loadPlayersWhoHavePlayedBefore() {
+	private void loadPlayersWhoHavePlayed() {
 		List<World> worlds = server.getWorlds();
 		for (World world : worlds) {
 			File playersFolder = new File(world.getWorldFolder(), "players");
-			for (File playerFile : playersFolder.listFiles()) {
-				String fileName = playerFile.getName();
-				String noExtension = fileName.substring(0,
-						fileName.length() - 4);
-				havePlayedBefore.add(server.getOfflinePlayer(noExtension));
+			if (!playersFolder.exists()) break;
+			for (String fileName : playersFolder.list()) {
+				String name = fileName.substring(0, fileName.length() - 4);
+				havePlayedBefore.add(server.getOfflinePlayer(name));
 			}
 		}
 	}
